@@ -26,6 +26,22 @@ def random_flip_along_x(gt_boxes, points, return_flip=False, enable=None):
     return gt_boxes, points
 
 
+def random_flip_with_param(points, enable, ax=1, offset=0):
+    """
+    Args:
+        points: (M, 3 + C)
+        enable: bool, whether to flip
+        ax: axis to flip (0=x, 1=y)
+        offset: offset to add before flipping
+    Returns:
+        points: flipped points
+    """
+    if enable and points is not None:
+        points[:, ax] = -(points[:, ax] + offset)
+
+    return points
+
+
 def random_flip_along_y(gt_boxes, points, return_flip=False, enable=None):
     """
     Args:

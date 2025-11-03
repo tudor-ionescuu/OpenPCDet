@@ -8,6 +8,7 @@ from .center_head import CenterHead
 from .voxelnext_head import VoxelNeXtHead
 from .transfusion_head import TransFusionHead
 from .IASSD_head import IASSD_Head
+from ..roi_heads.ted_head import TEDSHead, TEDMHead
 
 __all__ = {
     'AnchorHeadTemplate': AnchorHeadTemplate,
@@ -20,4 +21,6 @@ __all__ = {
     'VoxelNeXtHead': VoxelNeXtHead,
     'TransFusionHead': TransFusionHead,
     'IASSD_Head': IASSD_Head,
+    'TEDSHead': TEDSHead,
+    'TEDMHead': TEDMHead,
 }

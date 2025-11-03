@@ -62,7 +62,8 @@ class VoxelGeneratorWrapper():
 
 
 class DataProcessor(object):
-    def __init__(self, processor_configs, point_cloud_range, training, num_point_features):
+    def __init__(self, processor_configs, point_cloud_range, training, num_point_features, rot_num=1):
+        self.rot_num = rot_num
         self.point_cloud_range = point_cloud_range
         self.training = training
         self.num_point_features = num_point_features
@@ -148,35 +149,37 @@ class DataProcessor(object):
                 max_num_voxels=config.MAX_NUMBER_OF_VOXELS[self.mode],
             )
 
-        points = data_dict['points']
-        voxel_output = self.voxel_generator.generate(points)
-        voxels, coordinates, num_points = voxel_output
+        # Handle multiple rotations for TED model
+        for rot_num_id in range(self.rot_num):
+            if rot_num_id == 0:
+                rot_num_id_str = ''
+            else:
+                rot_num_id_str = str(rot_num_id)
+            
+            points = data_dict['points' + rot_num_id_str]
+            voxel_output = self.voxel_generator.generate(points)
+            voxels, coordinates, num_points = voxel_output
 
-        if not data_dict['use_lead_xyz']:
-            voxels = voxels[..., 3:]  # remove xyz in voxels(N, 3)
+            if not data_dict['use_lead_xyz']:
+                voxels = voxels[..., 3:]  # remove xyz in voxels(N, 3)
 
-        if config.get('DOUBLE_FLIP', False):
-            voxels_list, voxel_coords_list, voxel_num_points_list = [voxels], [coordinates], [num_points]
-            points_yflip, points_xflip, points_xyflip = self.double_flip(points)
-            points_list = [points_yflip, points_xflip, points_xyflip]
-            keys = ['yflip', 'xflip', 'xyflip']
-            for i, key in enumerate(keys):
-                voxel_output = self.voxel_generator.generate(points_list[i])
+            data_dict['voxels' + rot_num_id_str] = voxels
+            data_dict['voxel_coords' + rot_num_id_str] = coordinates
+            data_dict['voxel_num_points' + rot_num_id_str] = num_points
+
+            # Handle multi-modal if present
+            if 'mm' in data_dict:
+                points_mm = data_dict['points_mm' + rot_num_id_str]
+                voxel_output = self.voxel_generator.generate(points_mm)
                 voxels, coordinates, num_points = voxel_output
 
                 if not data_dict['use_lead_xyz']:
-                    voxels = voxels[..., 3:]
-                voxels_list.append(voxels)
-                voxel_coords_list.append(coordinates)
-                voxel_num_points_list.append(num_points)
+                    voxels = voxels[..., 3:]  # remove xyz in voxels(N, 3)
 
-            data_dict['voxels'] = voxels_list
-            data_dict['voxel_coords'] = voxel_coords_list
-            data_dict['voxel_num_points'] = voxel_num_points_list
-        else:
-            data_dict['voxels'] = voxels
-            data_dict['voxel_coords'] = coordinates
-            data_dict['voxel_num_points'] = num_points
+                data_dict['voxels_mm' + rot_num_id_str] = voxels
+                data_dict['voxel_coords_mm' + rot_num_id_str] = coordinates
+                data_dict['voxel_num_points_mm' + rot_num_id_str] = num_points
+
         return data_dict
 
     def sample_points(self, data_dict=None, config=None):

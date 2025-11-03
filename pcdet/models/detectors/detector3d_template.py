@@ -101,7 +101,9 @@ class Detector3DTemplate(nn.Module):
 
         map_to_bev_module = map_to_bev.__all__[self.model_cfg.MAP_TO_BEV.NAME](
             model_cfg=self.model_cfg.MAP_TO_BEV,
-            grid_size=model_info_dict['grid_size']
+            grid_size=model_info_dict.get('grid_size', None),
+            voxel_size=model_info_dict.get('voxel_size', None),
+            point_cloud_range=model_info_dict.get('point_cloud_range', None)
         )
         model_info_dict['module_list'].append(map_to_bev_module)
         model_info_dict['num_bev_features'] = map_to_bev_module.num_bev_features
