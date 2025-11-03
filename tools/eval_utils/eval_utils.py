@@ -10,6 +10,7 @@ from pcdet.utils import common_utils
 
 
 def statistics_info(cfg, ret_dict, metric, disp_dict):
+    # ... unchanged ...
     for cur_thresh in cfg.MODEL.POST_PROCESSING.RECALL_THRESH_LIST:
         metric['recall_roi_%s' % str(cur_thresh)] += ret_dict.get('roi_%s' % str(cur_thresh), 0)
         metric['recall_rcnn_%s' % str(cur_thresh)] += ret_dict.get('rcnn_%s' % str(cur_thresh), 0)
@@ -38,8 +39,10 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
     det_annos = []
 
     if getattr(args, 'infer_time', False):
-        start_iter = int(len(dataloader) * 0.1)
-        infer_time_meter = common_utils.AverageMeter()
+        # initialize a meter to track per-frame latency (in ms)
+        infer_time_meter = common_utils.AverageMeter()  # <<< added
+        # you could skip first few iterations if desired (optional)
+        # e.g. skip first 10% for warm up (not used here)
 
     logger.info('*************** EPOCH %s EVALUATION *****************' % epoch_id)
     if dist_test:
@@ -54,23 +57,35 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
 
     if cfg.LOCAL_RANK == 0:
         progress_bar = tqdm.tqdm(total=len(dataloader), leave=True, desc='eval', dynamic_ncols=True)
+
     start_time = time.time()
     for i, batch_dict in enumerate(dataloader):
         load_data_to_gpu(batch_dict)
 
+        # start timing for this batch if infer_time is enabled
         if getattr(args, 'infer_time', False):
-            start_time = time.time()
+            torch.cuda.synchronize()  # <<< ensure all prior CUDA ops finish
+            t0 = time.time()          # <<< record start time
 
         with torch.no_grad():
             pred_dicts, ret_dict = model(batch_dict)
 
-        disp_dict = {}
-
         if getattr(args, 'infer_time', False):
-            inference_time = time.time() - start_time
-            infer_time_meter.update(inference_time * 1000)
-            # use ms to measure inference time
-            disp_dict['infer_time'] = f'{infer_time_meter.val:.2f}({infer_time_meter.avg:.2f})'
+            # after inference, synchronize and record end
+            torch.cuda.synchronize()  # <<< wait for CUDA
+            t1 = time.time()
+            batch_time = t1 - t0
+            # find number of samples in this batch
+            bs = batch_dict.get('batch_size', None)
+            if bs is None:
+                bs = 1
+            # compute per-sample latency in ms
+            per_frame_ms = (batch_time * 1000.0) / bs
+            infer_time_meter.update(per_frame_ms)
+            disp_dict = {}
+            disp_dict['infer_time'] = f'{infer_time_meter.val:.2f} ({infer_time_meter.avg:.2f})'
+        else:
+            disp_dict = {}
 
         statistics_info(cfg, ret_dict, metric, disp_dict)
         annos = dataset.generate_prediction_dicts(
@@ -78,6 +93,7 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
             output_path=final_output_dir if args.save_to_file else None
         )
         det_annos += annos
+
         if cfg.LOCAL_RANK == 0:
             progress_bar.set_postfix(disp_dict)
             progress_bar.update()
@@ -91,6 +107,11 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
         metric = common_utils.merge_results_dist([metric], world_size, tmpdir=result_dir / 'tmpdir')
 
     logger.info('*************** Performance of EPOCH %s *****************' % epoch_id)
+
+    # after loop, log average latency
+    if getattr(args, 'infer_time', False):
+        logger.info(f"Average inference latency per frame: {infer_time_meter.avg:.2f} ms")  # <<< added
+
     sec_per_example = (time.time() - start_time) / len(dataloader.dataset)
     logger.info('Generate label finished(sec_per_example: %.4f second).' % sec_per_example)
 
@@ -134,7 +155,6 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
     logger.info('Result is saved to %s' % result_dir)
     logger.info('****************Evaluation done.*****************')
     return ret_dict
-
 
 if __name__ == '__main__':
     pass
