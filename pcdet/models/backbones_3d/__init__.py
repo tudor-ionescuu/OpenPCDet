@@ -7,6 +7,7 @@ from .spconv_backbone_voxelnext2d import VoxelResBackBone8xVoxelNeXt2D
 from .spconv_unet import UNetV2
 from .dsvt import DSVT
 from .voxelnet_backbone import VoxelNetBackbone
+from .IASSD_backbone import IASSD_Backbone
 
 __all__ = {
     'VoxelBackBone8x': VoxelBackBone8x,
@@ -21,4 +22,5 @@ __all__ = {
     'PillarRes18BackBone8x': PillarRes18BackBone8x,
     'DSVT': DSVT,
     'VoxelNetBackbone': VoxelNetBackbone,
+    'IASSD_Backbone': IASSD_Backbone,
 }

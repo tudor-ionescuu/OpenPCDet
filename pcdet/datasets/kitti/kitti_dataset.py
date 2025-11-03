@@ -107,7 +107,8 @@ class KittiDataset(DatasetTemplate):
 
     def get_calib(self, idx):
         calib_file = self.root_split_path / 'calib' / ('%s.txt' % idx)
-        assert calib_file.exists()
+        if not calib_file.exists():
+            raise FileNotFoundError(f"Calibration file not found: {calib_file}")
         return calibration_kitti.Calibration(calib_file)
 
     def get_road_plane(self, idx):
@@ -375,7 +376,20 @@ class KittiDataset(DatasetTemplate):
 
         info = copy.deepcopy(self.kitti_infos[index])
 
-        sample_idx = info['point_cloud']['lidar_idx']
+        # more robust version but not as pretty.
+        if 'lidar_idx' in info['point_cloud']:
+            sample_idx = info['point_cloud']['lidar_idx']
+        elif 'sample_idx' in info:
+            sample_idx = info['sample_idx']
+        else:
+            sample_idx = info['image']['image_idx']
+
+        # Ensure sample_idx is a properly formatted string
+        if isinstance(sample_idx, int):
+            sample_idx = str(sample_idx).zfill(6)
+        else:
+            sample_idx = str(sample_idx)
+
         img_shape = info['image']['image_shape']
         calib = self.get_calib(sample_idx)
         get_item_list = self.dataset_cfg.get('GET_ITEM_LIST', ['points'])

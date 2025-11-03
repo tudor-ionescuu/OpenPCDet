@@ -69,13 +69,26 @@ class Detector3DTemplate(nn.Module):
         if self.model_cfg.get('BACKBONE_3D', None) is None:
             return None, model_info_dict
 
-        backbone_3d_module = backbones_3d.__all__[self.model_cfg.BACKBONE_3D.NAME](
-            model_cfg=self.model_cfg.BACKBONE_3D,
-            input_channels=model_info_dict['num_point_features'],
-            grid_size=model_info_dict['grid_size'],
-            voxel_size=model_info_dict['voxel_size'],
-            point_cloud_range=model_info_dict['point_cloud_range']
-        )
+        # Check if the backbone requires num_class parameter (for IASSD and similar models)
+        backbone_class = backbones_3d.__all__[self.model_cfg.BACKBONE_3D.NAME]
+        import inspect
+        sig = inspect.signature(backbone_class.__init__)
+        
+        # Build kwargs for backbone initialization
+        backbone_kwargs = {
+            'model_cfg': self.model_cfg.BACKBONE_3D,
+            'input_channels': model_info_dict['num_point_features'],
+            'grid_size': model_info_dict['grid_size'],
+            'voxel_size': model_info_dict['voxel_size'],
+            'point_cloud_range': model_info_dict['point_cloud_range']
+        }
+        
+        # Add num_class if the backbone requires it
+        if 'num_class' in sig.parameters:
+            backbone_kwargs['num_class'] = self.num_class
+            
+        backbone_3d_module = backbone_class(**backbone_kwargs)
+        
         model_info_dict['module_list'].append(backbone_3d_module)
         model_info_dict['num_point_features'] = backbone_3d_module.num_point_features
         model_info_dict['backbone_channels'] = backbone_3d_module.backbone_channels \
