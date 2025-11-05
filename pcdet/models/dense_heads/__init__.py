@@ -11,6 +11,7 @@ from .voxelnext_head_maxpool import VoxelNeXtHeadMaxPool
 from .voxelnext_head_onnx import VoxelNeXtHeadONNX
 from .transfusion_head import TransFusionHead
 from .IASSD_head import IASSD_Head
+from .voxel_fpn_head import VoxelFPNHead
 from ..roi_heads.ted_head import TEDSHead, TEDMHead
 
 __all__ = {
@@ -27,6 +28,7 @@ __all__ = {
     'VoxelNeXtHeadONNX': VoxelNeXtHeadONNX,
     'TransFusionHead': TransFusionHead,
     'IASSD_Head': IASSD_Head,
+    'VoxelFPNHead': VoxelFPNHead,
     'TEDSHead': TEDSHead,
     'TEDMHead': TEDMHead,
 }
