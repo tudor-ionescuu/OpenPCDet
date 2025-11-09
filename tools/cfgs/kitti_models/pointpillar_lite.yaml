@@ -14,11 +14,11 @@ DATA_CONFIG:
           }
 
         - NAME: transform_points_to_voxels
-          VOXEL_SIZE: [0.16, 0.16, 4]
-          MAX_POINTS_PER_VOXEL: 32
+          VOXEL_SIZE: [0.32, 0.32, 4]  # Much larger voxels = fewer voxels to process
+          MAX_POINTS_PER_VOXEL: 20  # Reduced from 32
           MAX_NUMBER_OF_VOXELS: {
-            'train': 16000,
-            'test': 40000
+            'train': 10000,  # Reduced from 16000
+            'test': 25000  # Reduced from 40000
           }
     DATA_AUGMENTOR:
         DISABLE_AUG_LIST: ['placeholder']
@@ -55,19 +55,19 @@ MODEL:
         WITH_DISTANCE: False
         USE_ABSLOTE_XYZ: True
         USE_NORM: True
-        NUM_FILTERS: [64]
+        NUM_FILTERS: [32]  # Reduced from 64
 
     MAP_TO_BEV:
         NAME: PointPillarScatter
-        NUM_BEV_FEATURES: 64
+        NUM_BEV_FEATURES: 32  # Reduced from 64
 
     BACKBONE_2D:
         NAME: BaseBEVBackbone
-        LAYER_NUMS: [2, 4, 4]  # Reduced from [3, 5, 5] - ~20% fewer layers
+        LAYER_NUMS: [2, 3, 3]  # Reduced from [3, 5, 5]
         LAYER_STRIDES: [2, 2, 2]
-        NUM_FILTERS: [64, 128, 256]
+        NUM_FILTERS: [32, 64, 128]  # Reduced by 50% from [64, 128, 256]
         UPSAMPLE_STRIDES: [1, 2, 4]
-        NUM_UPSAMPLE_FILTERS: [128, 128, 128]
+        NUM_UPSAMPLE_FILTERS: [64, 64, 64]  # Reduced by 50% from [128, 128, 128]
 
     DENSE_HEAD:
         NAME: AnchorHeadSingle
