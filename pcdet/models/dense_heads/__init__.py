@@ -12,6 +12,7 @@ from .voxelnext_head_onnx import VoxelNeXtHeadONNX
 from .transfusion_head import TransFusionHead
 from .IASSD_head import IASSD_Head
 from ..roi_heads.ted_head import TEDSHead, TEDMHead
+from .multigroup_head import MultiGroupHead
 
 __all__ = {
     'AnchorHeadTemplate': AnchorHeadTemplate,
@@ -29,4 +30,5 @@ __all__ = {
     'IASSD_Head': IASSD_Head,
     'TEDSHead': TEDSHead,
     'TEDMHead': TEDMHead,
+    'MultiGroupHead': MultiGroupHead,
 }

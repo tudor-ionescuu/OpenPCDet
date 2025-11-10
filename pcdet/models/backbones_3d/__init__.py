@@ -11,6 +11,7 @@ from .dsvt import DSVT
 from .voxelnet_backbone import VoxelNetBackbone
 from .IASSD_backbone import IASSD_Backbone
 from .spconv_backbone import TeVoxelBackBone8x, TeMMVoxelBackBone8x
+from .spconv_backbone_fhd import SpMiddleFHD
 
 __all__ = {
     'VoxelBackBone8x': VoxelBackBone8x,
@@ -30,4 +31,5 @@ __all__ = {
     'IASSD_Backbone': IASSD_Backbone,
     'TeVoxelBackBone8x': TeVoxelBackBone8x,
     'TeMMVoxelBackBone8x': TeMMVoxelBackBone8x,
+    'SpMiddleFHD': SpMiddleFHD,
 }

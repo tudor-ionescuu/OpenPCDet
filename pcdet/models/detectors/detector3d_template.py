@@ -88,11 +88,16 @@ class Detector3DTemplate(nn.Module):
             backbone_kwargs['num_class'] = self.num_class
             
         backbone_3d_module = backbone_class(**backbone_kwargs)
-        
+
         model_info_dict['module_list'].append(backbone_3d_module)
         model_info_dict['num_point_features'] = backbone_3d_module.num_point_features
         model_info_dict['backbone_channels'] = backbone_3d_module.backbone_channels \
             if hasattr(backbone_3d_module, 'backbone_channels') else None
+
+        # Set num_bev_features if the backbone provides it (used by 2D backbones like SSFA)
+        if hasattr(backbone_3d_module, 'num_bev_features'):
+            model_info_dict['num_bev_features'] = backbone_3d_module.num_bev_features
+
         return backbone_3d_module, model_info_dict
 
     def build_map_to_bev_module(self, model_info_dict):

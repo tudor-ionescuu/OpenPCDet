@@ -193,6 +193,46 @@ class WeightedSmoothL1Loss(nn.Module):
             loss = loss * weights.unsqueeze(-1)
 
         return loss
+    
+
+class ODIoULoss3D(nn.Module):
+    """Orientation-aware Distance IoU loss used by SE-SSD."""
+
+    def __init__(self, code_weights=None, loss_weight=1.0, eps=1e-6):
+        super().__init__()
+        self.loss_weight = loss_weight
+        self.eps = eps
+        # code_weights not used for IoU-based loss, but accepted for compatibility
+
+    def forward(self, pred_boxes, target_boxes, weights=None):
+        if weights is None:
+            weights = pred_boxes.new_ones(pred_boxes.shape[:2])
+
+        loss = pred_boxes.new_zeros(pred_boxes.shape[:2])
+        mask = weights > 0
+        if mask.sum() == 0:
+            return loss
+
+        pred_sel = pred_boxes[mask]
+        target_sel = target_boxes[mask]
+
+        iou = iou3d_nms_utils.boxes_aligned_iou3d_gpu(pred_sel.contiguous(), target_sel.contiguous()).squeeze(-1).clamp(min=0.0)
+        center_dist_sq = (pred_sel[:, :3] - target_sel[:, :3]).pow(2).sum(dim=-1)
+
+        pred_corners = box_utils.boxes_to_corners_3d(pred_sel)
+        target_corners = box_utils.boxes_to_corners_3d(target_sel)
+        combined = torch.cat([pred_corners, target_corners], dim=1)
+        min_coords = combined.min(dim=1)[0]
+        max_coords = combined.max(dim=1)[0]
+        diag_sq = (max_coords - min_coords).pow(2).sum(dim=-1).clamp(min=self.eps)
+
+        dist_penalty = center_dist_sq / diag_sq
+        angle_diff = pred_sel[:, 6] - target_sel[:, 6]
+        angle_penalty = 1.25 * (1 - torch.abs(torch.cos(angle_diff)))
+
+        loss_vals = (1 - iou) + dist_penalty + angle_penalty
+        loss[mask] = loss_vals * weights[mask] * self.loss_weight
+        return loss
 
 
 class WeightedL1Loss(nn.Module):
