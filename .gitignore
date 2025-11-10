@@ -14,3 +14,10 @@ venv/
 *.bin
 output
 version.py
+load_pretrained_light.py
+quantize_pointpillar.py
+pointpillar_layderdrop_light.yaml
+pointpillar_layerdrop_ultralight.yaml
+pointpillar_postprocess_fast.yaml
+pointpillar_postprocess_ultrafast.yaml
+pointpillar_reduced_upsample.yaml
