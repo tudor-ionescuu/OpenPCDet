@@ -8,6 +8,16 @@ from .fastai_optim import OptimWrapper
 from .learning_schedules_fastai import CosineWarmupLR, OneCycle, CosineAnnealing
 
 
+class LambdaLRWrapper:
+    """Wrapper for LambdaLR to match OneCycle interface"""
+    def __init__(self, lr_scheduler):
+        self.lr_scheduler = lr_scheduler
+        
+    def step(self, step, epoch=None):
+        """Step method compatible with OneCycle interface"""
+        self.lr_scheduler.step()
+
+
 def build_optimizer(model, optim_cfg):
     if optim_cfg.OPTIMIZER == 'adam':
         optimizer = optim.Adam(model.parameters(), lr=optim_cfg.LR, weight_decay=optim_cfg.WEIGHT_DECAY)
@@ -58,6 +68,7 @@ def build_scheduler(optimizer, total_iters_each_epoch, total_epochs, last_epoch,
         )
     else:
         lr_scheduler = lr_sched.LambdaLR(optimizer, lr_lbmd, last_epoch=last_epoch)
+        lr_scheduler = LambdaLRWrapper(lr_scheduler)  # Wrap to match OneCycle interface
 
         if optim_cfg.LR_WARMUP:
             lr_warmup_scheduler = CosineWarmupLR(

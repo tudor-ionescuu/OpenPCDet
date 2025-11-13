@@ -95,8 +95,9 @@ class StackedVFELayers(nn.Module):
         # Final max pooling across points dimension
         x = torch.max(x, dim=1)[0]  # (num_voxels, out_channels * 2)
         
-        # Take only the first half (the concatenated part from last layer)
-        # This matches the paper's final voxel feature dimension
+        # Paper specifies final output is out_channels (64)
+        # The last VFE layer outputs concatenated features, we take the learned part
+        # Split and take the pointwise features (first half after concat)
         x = x[:, :self.out_channels]
         
         return x
@@ -199,14 +200,17 @@ class VoxelFPNVFE(nn.Module):
             # Original: x, y, z, r (4 features)
             # Add: dx, dy, dz (offset from voxel centroid)
             # Add: dx_plane, dy_plane (offset from xy-plane centroid)
-            points_mean = voxels[:, :, :3].sum(dim=1, keepdim=True) / \
-                         voxel_num_points.type_as(voxels).view(-1, 1, 1)
+            
+            # Protect against division by zero: clamp voxel_num_points to at least 1
+            # This can happen with empty voxels or edge cases in voxelization
+            voxel_count = torch.clamp(voxel_num_points, min=1).type_as(voxels).view(-1, 1, 1)
+            
+            points_mean = voxels[:, :, :3].sum(dim=1, keepdim=True) / voxel_count
             
             f_cluster = voxels[:, :, :3] - points_mean
             
             # XY plane centroid
-            points_mean_xy = voxels[:, :, :2].sum(dim=1, keepdim=True) / \
-                            voxel_num_points.type_as(voxels).view(-1, 1, 1)
+            points_mean_xy = voxels[:, :, :2].sum(dim=1, keepdim=True) / voxel_count[:, :, :2]
             f_cluster_xy = voxels[:, :, :2] - points_mean_xy
             
             # Concatenate all features: [x, y, z, r, dx, dy, dz, dx_plane, dy_plane]
@@ -260,37 +264,33 @@ class VoxelFPNVFE(nn.Module):
             spatial_features_list.append(spatial_features)
         
         # Early fusion: bottom-up upsampling and concatenation
-        # Start from coarsest scale (scale_2) and fuse upward
-        fused_features = []
+        # Paper: Start from coarsest scale (scale_2=0.64m) and fuse upward to finest (scale_0=0.16m)
+        # spatial_features_list[0] = finest (0.16m), [1] = medium (0.32m), [2] = coarsest (0.64m)
         
-        # Scale 2 (coarsest) - no fusion, just use as is
-        fused_features.append(spatial_features_list[2])
+        # Step 1: Scale 2 (coarsest, 0.64m) -> upsample -> concat with Scale 1 (0.32m)
+        upsampled_2to1 = F.interpolate(spatial_features_list[2], 
+                                       size=(spatial_features_list[1].shape[2], 
+                                            spatial_features_list[1].shape[3]),
+                                       mode='bilinear', align_corners=False)
+        concatenated_1 = torch.cat([spatial_features_list[1], upsampled_2to1], dim=1)  # 64 + 64 = 128
+        fused_scale_1 = self.fusion_convs[1](concatenated_1)  # 128 -> 64
         
-        # Scale 2 -> Scale 1 fusion
-        upsampled = F.interpolate(spatial_features_list[2], 
-                                 size=(spatial_features_list[1].shape[2], 
-                                      spatial_features_list[1].shape[3]),
-                                 mode='bilinear', align_corners=False)
-        concatenated = torch.cat([spatial_features_list[1], upsampled], dim=1)
-        fused_1 = self.fusion_convs[1](concatenated)
-        fused_features.append(fused_1)
+        # Step 2: Fused Scale 1 -> upsample -> concat with Scale 0 (finest, 0.16m)
+        upsampled_1to0 = F.interpolate(fused_scale_1,
+                                       size=(spatial_features_list[0].shape[2],
+                                            spatial_features_list[0].shape[3]),
+                                       mode='bilinear', align_corners=False)
+        concatenated_0 = torch.cat([spatial_features_list[0], upsampled_1to0], dim=1)  # 64 + 64 = 128
+        fused_scale_0 = self.fusion_convs[0](concatenated_0)  # 128 -> 64
         
-        # Scale 1 -> Scale 0 fusion
-        upsampled = F.interpolate(fused_1,
-                                 size=(spatial_features_list[0].shape[2],
-                                      spatial_features_list[0].shape[3]),
-                                 mode='bilinear', align_corners=False)
-        concatenated = torch.cat([spatial_features_list[0], upsampled], dim=1)
-        fused_0 = self.fusion_convs[0](concatenated)
-        fused_features.append(fused_0)
-        
-        # Store outputs in batch_dict (reverse order: finest to coarsest)
-        batch_dict['spatial_features_scale_0'] = fused_features[2]  # Finest (0.16m)
-        batch_dict['spatial_features_scale_1'] = fused_features[1]  # Medium (0.32m)
-        batch_dict['spatial_features_scale_2'] = fused_features[0]  # Coarsest (0.64m)
+        # Store outputs in batch_dict with correct scale mapping
+        # scale_0 = finest (0.16m), scale_1 = medium (0.32m), scale_2 = coarsest (0.64m)
+        batch_dict['spatial_features_scale_0'] = fused_scale_0      # Finest (0.16m) - FUSED
+        batch_dict['spatial_features_scale_1'] = fused_scale_1      # Medium (0.32m) - FUSED  
+        batch_dict['spatial_features_scale_2'] = spatial_features_list[2]  # Coarsest (0.64m) - ORIGINAL
         
         # For compatibility, set the finest scale as spatial_features_2d for backbone_2d
-        batch_dict['spatial_features_2d'] = fused_features[2]
-        batch_dict['spatial_features'] = fused_features[2]
+        batch_dict['spatial_features_2d'] = fused_scale_0
+        batch_dict['spatial_features'] = fused_scale_0
         
         return batch_dict

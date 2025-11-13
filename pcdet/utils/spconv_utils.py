@@ -10,6 +10,12 @@ try:
 except:
     import spconv as spconv
 
+# Compatibility: Add SparseModule if it doesn't exist (spconv 2.3.x changed API)
+if not hasattr(spconv, 'SparseModule'):
+    # In spconv 2.3+, SparseModule was removed. Use nn.Module instead
+    import torch.nn as nn
+    spconv.SparseModule = nn.Module
+
 import torch.nn as nn
 
 

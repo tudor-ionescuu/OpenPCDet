@@ -2,8 +2,6 @@ CLASS_NAMES: ['Car', 'Pedestrian', 'Cyclist']
 
 DATA_CONFIG:
     _BASE_CONFIG_: cfgs/dataset_configs/kitti_dataset.yaml
-    # Override data path to use local preprocessed data
-    DATA_PATH: '../data/kitti'
     # Point cloud range from paper (for Cars)
     POINT_CLOUD_RANGE: [0, -39.68, -3, 69.12, 39.68, 1]
     
@@ -22,7 +20,7 @@ DATA_CONFIG:
           VOXEL_SIZES: [[0.16, 0.16, 4.0], [0.32, 0.32, 4.0], [0.64, 0.64, 4.0]]
           MAX_POINTS_PER_VOXEL: [100, 200, 300]  # Paper: Scale 1, 2, 3
           MAX_NUMBER_OF_VOXELS: {
-            'train': [12000, 8000, 6000],   # Paper specifications
+            'train': [16000, 12000, 8000],   # Increased to prevent empty batches
             'test': [20000, 15000, 10000]
           }
 
@@ -80,40 +78,36 @@ MODEL:
 
         # Anchor configuration (Paper specifications)
         ANCHOR_GENERATOR_CONFIG: [
-      {
-        'class_name': 'Car',
-        'anchor_sizes': [[3.9, 1.6, 1.5]],      # Paper: l=3.9m, w=1.6m, h=1.5m
-        'anchor_rotations': [0, 1.57],           # 0° and 90°
-        # Anchor config expects bottom heights (z_bottom). To set anchor center z = -1.0
-        # we need bottom = center - h/2 = -1.0 - 1.5/2 = -1.75
-        'anchor_bottom_heights': [-1.75],       # bottom z so centers align with paper
-        'align_center': False,
-        'feature_map_stride': 2,                 # After downsampling in backbone
-        'matched_threshold': 0.6,
-        'unmatched_threshold': 0.45
-      },
-      {
-        'class_name': 'Pedestrian',
-        'anchor_sizes': [[0.8, 0.6, 1.73]],     # Paper: l=0.8m, w=0.6m, h=1.73m
-        'anchor_rotations': [0, 1.57],
-        # bottom = center - h/2 = -0.6 - 1.73/2 = -1.465
-        'anchor_bottom_heights': [-1.465],
-        'align_center': False,
-        'feature_map_stride': 2,
-        'matched_threshold': 0.5,
-        'unmatched_threshold': 0.35
-      },
-      {
-        'class_name': 'Cyclist',
-        'anchor_sizes': [[1.76, 0.6, 1.73]],    # Paper: l=1.76m, w=0.6m, h=1.73m
-        'anchor_rotations': [0, 1.57],
-        # bottom = center - h/2 = -0.6 - 1.73/2 = -1.465
-        'anchor_bottom_heights': [-1.465],
-        'align_center': False,
-        'feature_map_stride': 2,
-        'matched_threshold': 0.5,
-        'unmatched_threshold': 0.35
-      }
+            {
+                'class_name': 'Car',
+                'anchor_sizes': [[3.9, 1.6, 1.5]],      # Paper: l=3.9m, w=1.6m, h=1.5m
+                'anchor_rotations': [0, 1.57],           # 0° and 90°
+                'anchor_bottom_heights': [-1.0],         # Paper: z_center = -1.0m (fixed)
+                'align_center': False,
+                'feature_map_stride': 2,                 # After downsampling in backbone
+                'matched_threshold': 0.6,
+                'unmatched_threshold': 0.45
+            },
+            {
+                'class_name': 'Pedestrian',
+                'anchor_sizes': [[0.8, 0.6, 1.73]],     # Paper: l=0.8m, w=0.6m, h=1.73m
+                'anchor_rotations': [0, 1.57],
+                'anchor_bottom_heights': [-0.6],         # Paper: z_center = -0.6m
+                'align_center': False,
+                'feature_map_stride': 2,
+                'matched_threshold': 0.5,
+                'unmatched_threshold': 0.35
+            },
+            {
+                'class_name': 'Cyclist',
+                'anchor_sizes': [[1.76, 0.6, 1.73]],    # Paper: l=1.76m, w=0.6m, h=1.73m
+                'anchor_rotations': [0, 1.57],
+                'anchor_bottom_heights': [-0.6],         # Paper: z_center = -0.6m
+                'align_center': False,
+                'feature_map_stride': 2,
+                'matched_threshold': 0.5,
+                'unmatched_threshold': 0.35
+            }
         ]
 
         TARGET_ASSIGNER_CONFIG:
@@ -143,9 +137,7 @@ MODEL:
         NMS_CONFIG:
             MULTI_CLASSES_NMS: False
             NMS_TYPE: nms_gpu
-            # Very low NMS thresh (0.01) was suppressing results in some setups.
-            # Use a more typical IoU threshold so detections are retained (e.g. 0.5).
-            NMS_THRESH: 0.5
+            NMS_THRESH: 0.1     # Fixed from 0.01 - was too low and could cause FP errors
             NMS_PRE_MAXSIZE: 4096
             NMS_POST_MAXSIZE: 500
 
@@ -155,18 +147,22 @@ OPTIMIZATION:
     BATCH_SIZE_PER_GPU: 2              # Paper: typical for 3D detection due to memory
     NUM_EPOCHS: 160                     # Paper: 160 epochs
 
-    # Paper: Adam optimizer with lr=0.0002, exponential decay γ=0.8 every 15 epochs
-    OPTIMIZER: adam
-    LR: 0.0002                          # Paper: 0.0002 initial learning rate
+    # Paper: Adam optimizer with lr=0.0002
+    # Using adam_onecycle for compatibility with OpenPCDet training loop
+    OPTIMIZER: adam_onecycle
+    LR: 0.0002                          # Paper: 0.0002 (peak learning rate)
     WEIGHT_DECAY: 0.01
     MOMENTUM: 0.9
     
-    # Exponential decay schedule to match paper:
-    # Every 15 epochs, multiply LR by 0.8
-    # Epoch 0-14: 0.0002, 15-29: 0.00016, 30-44: 0.000128, etc.
-    DECAY_STEP_LIST: [15, 30, 45, 60, 75, 90, 105, 120, 135, 150]
-    LR_DECAY: 0.8                       # Paper: γ = 0.8 decay factor
-    LR_CLIP: 0.00000001                 # Minimum learning rate
+    # OneCycle parameters
+    MOMS: [0.95, 0.85]                  # Momentum schedule for OneCycle
+    PCT_START: 0.4                      # Percent of cycle for learning rate increase
+    DIV_FACTOR: 10                      # Initial lr = LR / DIV_FACTOR
+    
+    # Legacy parameters (required by OpenPCDet even for adam_onecycle)
+    DECAY_STEP_LIST: [35, 45]
+    LR_DECAY: 0.1
+    LR_CLIP: 0.0000001
     
     LR_WARMUP: False
     WARMUP_EPOCH: 1

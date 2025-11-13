@@ -337,6 +337,14 @@ class DataProcessor(object):
             voxel_output = generator.generate(points)
             voxels, coordinates, num_points = voxel_output
             
+            # Filter out empty voxels that can cause NaN
+            if num_points is not None and len(num_points) > 0:
+                valid_mask = num_points > 0
+                if valid_mask.sum() < len(num_points):
+                    voxels = voxels[valid_mask]
+                    coordinates = coordinates[valid_mask]
+                    num_points = num_points[valid_mask]
+            
             if not data_dict['use_lead_xyz']:
                 voxels = voxels[..., 3:]  # remove xyz in voxels(N, 3)
             

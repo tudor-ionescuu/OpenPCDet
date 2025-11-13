@@ -75,127 +75,128 @@ class RPNFPNBackbone(nn.Module):
         
         # Lateral connections for each scale (process VFE-FPN features)
         # Each lateral connection processes the VFE output with a 3x3 conv
-        self.lateral_scale_0 = ConvBNReLU(64, 64, kernel_size=3, stride=1, padding=1)
-        self.lateral_scale_1 = ConvBNReLU(64, 64, kernel_size=3, stride=1, padding=1)
-        self.lateral_scale_2 = ConvBNReLU(64, 64, kernel_size=3, stride=1, padding=1)
+        self.lateral_scale_1 = ConvBNReLU(64, 64, kernel_size=3, stride=1, padding=1)  # Medium scale
+        self.lateral_scale_2 = ConvBNReLU(64, 64, kernel_size=3, stride=1, padding=1)  # Coarsest scale
         
-        # Top-down pathway
-        # From Block 3 (coarsest) to Block 2
-        self.deconv3to2 = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2, padding=0, bias=False),
+        # Reduce channels for top-down pathway
+        # Block3 (256) -> 128 for concatenation with lateral (64)
+        self.reduce_block3 = ConvBNReLU(256, 128, kernel_size=1, stride=1, padding=0)
+        
+        # Top-down pathway - Paper Figure 3 architecture
+        # Level 3 (coarsest): Process concatenated features at scale 2
+        # After concat: reduced_block3(128) + lateral(64) = 192 channels
+        self.fpn_scale_2_conv = nn.Sequential(
+            ConvBNReLU(192, 128, kernel_size=3, stride=1, padding=1),
+            ConvBNReLU(128, 128, kernel_size=3, stride=1, padding=1),
+        )
+        
+        # Deconv from scale 2 to scale 1
+        self.deconv_2to1 = nn.Sequential(
+            nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0, bias=False),
             nn.BatchNorm2d(128, eps=1e-3, momentum=0.01),
             nn.ReLU(inplace=True)
         )
         
-        # Process concatenated features at scale 2
-        # Input: upsampled (128) + lateral VFE (64) + Block2 output (128) = 320 channels
-        # But according to the paper, we concatenate upsampled + lateral, then process
-        # Upsampled: 128, Lateral: 64 -> 192 channels
-        self.smooth_scale_2 = nn.Sequential(
-            ConvBNReLU(192, 128, kernel_size=3, stride=2, padding=1),  # Downsample for next stage
+        # Level 2 (medium): Process concatenated features at scale 1  
+        # After concat: lateral(64) + deconv(128) + block1(64) = 256 channels
+        self.fpn_scale_1_conv = nn.Sequential(
+            ConvBNReLU(256, 128, kernel_size=3, stride=1, padding=1),
             ConvBNReLU(128, 128, kernel_size=3, stride=1, padding=1),
         )
         
-        # From processed Scale 2 to Scale 1
-        self.deconv2to1 = nn.Sequential(
+        # Deconv from scale 1 to scale 0 (for final output)
+        self.deconv_1to0 = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2, padding=0, bias=False),
             nn.BatchNorm2d(64, eps=1e-3, momentum=0.01),
             nn.ReLU(inplace=True)
         )
         
-        # Process concatenated features at scale 1
-        # Upsampled: 64, Lateral: 64 -> 128 channels
-        self.smooth_scale_1 = nn.Sequential(
-            ConvBNReLU(128, 64, kernel_size=3, stride=2, padding=1),  # Downsample for next stage
-            ConvBNReLU(64, 64, kernel_size=3, stride=1, padding=1),
+        # Level 1 (finest): Final processing
+        # After concat: lateral_from_vfe(64) + deconv(64) = 128 channels
+        self.fpn_scale_0_conv = nn.Sequential(
+            ConvBNReLU(128, 128, kernel_size=3, stride=1, padding=1),
+            ConvBNReLU(128, 128, kernel_size=3, stride=1, padding=1),
         )
         
-        # Final deconv for detection output at scale 0
-        self.final_deconv = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2, padding=0, bias=False),
-            nn.BatchNorm2d(64, eps=1e-3, momentum=0.01),
-            nn.ReLU(inplace=True)
-        )
-        
-        # Output channels for each pyramid level
-        self.num_bev_features = 128  # Final output channels (after concatenation)
+        # Output channels for detection head
+        self.num_bev_features = 128
         
     def forward(self, data_dict):
         """
         Args:
             data_dict:
-                spatial_features_scale_0: (B, 64, H0, W0) - finest scale from VFE-FPN
-                spatial_features_scale_1: (B, 64, H1, W1) - medium scale from VFE-FPN  
-                spatial_features_scale_2: (B, 64, H2, W2) - coarsest scale from VFE-FPN
+                spatial_features_scale_0: (B, 64, H0, W0) - finest scale from VFE-FPN (0.16m)
+                spatial_features_scale_1: (B, 64, H1, W1) - medium scale from VFE-FPN (0.32m)
+                spatial_features_scale_2: (B, 64, H2, W2) - coarsest scale from VFE-FPN (0.64m)
                 
         Returns:
             data_dict with added:
                 spatial_features_2d: Final feature map for detection head
-                spatial_features_p1, p2, p3: Multi-scale pyramid features
         """
-        # Get multi-scale features from VFE-FPN
+        # Get multi-scale features from VFE-FPN (all fused from early fusion)
         vfe_scale_0 = data_dict['spatial_features_scale_0']  # Finest (432, 496, 64)
         vfe_scale_1 = data_dict['spatial_features_scale_1']  # Medium (216, 248, 64)
         vfe_scale_2 = data_dict['spatial_features_scale_2']  # Coarsest (108, 124, 64)
         
-        # Bottom-up pathway on finest scale
+        # Bottom-up pathway on finest scale (Paper: Block 1, 2, 3)
         x_block1 = self.block1(vfe_scale_0)  # (216, 248, 64)
         x_block2 = self.block2(x_block1)      # (108, 124, 128)
         x_block3 = self.block3(x_block2)      # (54, 62, 256)
         
-        # Top-down pathway with lateral connections
+        # ===== Top-down pathway with lateral connections (FPN) =====
+        # Paper: Deconv upsampling + lateral connections + concatenation fusion
+        # Start from coarsest scale (block3) and fuse downward
         
-        # Level 3 (coarsest): Process VFE scale 2 features
+        # Level 3 (coarsest, ~0.64m scale):
+        # Start with block3 (54, 62, 256) - this is our coarsest RPN output
+        # Upsample block3 to match block2 size (108, 124)
+        up_3to2 = F.interpolate(x_block3, size=(x_block2.shape[2], x_block2.shape[3]), 
+                               mode='bilinear', align_corners=False)  # (108, 124, 256)
+        
+        # Reduce channels of upsampled block3 from 256 to 128
+        up_3to2_reduced = self.reduce_block3(up_3to2)  # (108, 124, 128)
+        
+        # Process VFE scale 2 through lateral connection
         lateral_2 = self.lateral_scale_2(vfe_scale_2)  # (108, 124, 64)
         
-        # Upsample from block3 to match scale 2
-        up_3to2 = self.deconv3to2(x_block3)  # (108, 124, 128)
+        # Concatenate: upsampled_block3(128) + lateral(64) = 192
+        # This fuses top-down pathway from RPN with VFE features
+        concat_2 = torch.cat([up_3to2_reduced, lateral_2], dim=1)  # (108, 124, 192)
         
-        # Concatenate upsampled + lateral
-        concat_2 = torch.cat([up_3to2, lateral_2], dim=1)  # (108, 124, 192)
+        # Process concatenated features
+        p2 = self.fpn_scale_2_conv(concat_2)  # (108, 124, 128)
         
-        # Smooth and process scale 2
-        smooth_2 = self.smooth_scale_2(concat_2)  # (54, 62, 128) - downsampled
+        # Deconv to next level
+        up_2to1 = self.deconv_2to1(p2)  # (216, 248, 128)
         
-        # Level 2 (medium): Process VFE scale 1 features
+        # Level 2 (medium, ~0.32m scale):
+        # Process VFE scale 1 through lateral connection
         lateral_1 = self.lateral_scale_1(vfe_scale_1)  # (216, 248, 64)
         
-        # Upsample from smooth_2 to match scale 1
-        up_2to1 = self.deconv2to1(smooth_2)  # (108, 124, 64) - needs another 2x upsample
-        up_2to1 = F.interpolate(up_2to1, size=(vfe_scale_1.shape[2], vfe_scale_1.shape[3]), 
-                               mode='bilinear', align_corners=False)  # (216, 248, 64)
+        # Concatenate: deconv(128) + lateral(64) + block1(64) = 256
+        concat_1 = torch.cat([up_2to1, lateral_1, x_block1], dim=1)  # (216, 248, 256)
         
-        # Concatenate upsampled + lateral
-        concat_1 = torch.cat([up_2to1, lateral_1], dim=1)  # (216, 248, 128)
+        # Process concatenated features
+        p1 = self.fpn_scale_1_conv(concat_1)  # (216, 248, 128)
         
-        # Smooth and process scale 1
-        smooth_1 = self.smooth_scale_1(concat_1)  # (108, 124, 64) - downsampled
+        # Deconv to finest level
+        up_1to0 = self.deconv_1to0(p1)  # (432, 496, 64)
         
-        # Level 1 (finest): Process VFE scale 0 features
-        lateral_0 = self.lateral_scale_0(vfe_scale_0)  # (432, 496, 64)
-        
-        # Upsample from smooth_1 to match scale 0
-        up_1to0 = F.interpolate(smooth_1, size=(vfe_scale_0.shape[2], vfe_scale_0.shape[3]),
-                               mode='bilinear', align_corners=False)  # (432, 496, 64)
-        
-        # Concatenate upsampled + lateral
-        concat_0 = torch.cat([up_1to0, lateral_0], dim=1)  # (432, 496, 128)
+        # Level 1 (finest, ~0.16m scale):
+        # Concatenate with original VFE finest scale
+        concat_0 = torch.cat([up_1to0, vfe_scale_0], dim=1)  # (432, 496, 128)
         
         # Final processing
-        # Apply final deconv to get detection features
-        # Note: The paper suggests we create feature pyramid outputs
-        # For simplicity, we'll use the finest scale as main output
-        p1 = concat_0  # Finest scale features
+        p0 = self.fpn_scale_0_conv(concat_0)  # (432, 496, 128)
         
-        # Optionally downsample p1 for final detection head
-        # The paper uses feature maps at different scales for detection
-        # Here we'll downsample to a reasonable size for the detection head
-        final_features = F.avg_pool2d(p1, kernel_size=2, stride=2)  # (216, 248, 128)
+        # Downsample p0 for detection head (reduce computational cost)
+        # Paper uses multi-scale detection, but for simplicity we use downsampled finest scale
+        final_features = F.avg_pool2d(p0, kernel_size=2, stride=2)  # (216, 248, 128)
         
         # Store outputs
         data_dict['spatial_features_2d'] = final_features
-        data_dict['spatial_features_p1'] = p1              # Finest
-        data_dict['spatial_features_p2'] = concat_1        # Medium  
-        data_dict['spatial_features_p3'] = concat_2        # Coarsest
+        data_dict['spatial_features_p0'] = p0              # Finest
+        data_dict['spatial_features_p1'] = p1              # Medium  
+        data_dict['spatial_features_p2'] = p2              # Coarsest
         
         return data_dict
