@@ -14,6 +14,8 @@ venv/
 *.bin
 output
 version.py
+logs/
+dcgm/
 load_pretrained_light.py
 quantize_pointpillar.py
 pointpillar_layderdrop_light.yaml

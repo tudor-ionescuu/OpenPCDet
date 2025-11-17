@@ -270,6 +270,10 @@ class DatasetTemplate(torch_data.Dataset):
             point_key_dict.append('voxel_coords' + str(i))
             point_key_dict.append('points_mm' + str(i))
             point_key_dict.append('voxel_coords_mm' + str(i))
+        
+        # Add multi-scale voxel coords for Voxel-FPN
+        for scale_idx in range(10):
+            point_key_dict.append(f'voxel_coords_scale_{scale_idx}')
 
         voxel_key_dict = ['voxels', 'voxel_num_points', 'voxels_mm', 'voxel_num_points_mm']
         for i in range(1, 10):
@@ -277,6 +281,11 @@ class DatasetTemplate(torch_data.Dataset):
             voxel_key_dict.append('voxel_num_points' + str(i))
             voxel_key_dict.append('voxels_mm' + str(i))
             voxel_key_dict.append('voxel_num_points_mm' + str(i))
+        
+        # Add multi-scale voxels for Voxel-FPN
+        for scale_idx in range(10):
+            voxel_key_dict.append(f'voxels_scale_{scale_idx}')
+            voxel_key_dict.append(f'voxel_num_points_scale_{scale_idx}')
 
         boxes_key = ['gt_boxes']
         for i in range(1, 10):

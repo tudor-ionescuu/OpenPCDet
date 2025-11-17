@@ -1,0 +1,175 @@
+CLASS_NAMES: ['Car', 'Pedestrian', 'Cyclist']
+
+DATA_CONFIG:
+    _BASE_CONFIG_: cfgs/dataset_configs/kitti_dataset.yaml
+    # Point cloud range from paper (for Cars)
+    POINT_CLOUD_RANGE: [0, -39.68, -3, 69.12, 39.68, 1]
+    
+    DATA_PROCESSOR:
+        - NAME: mask_points_and_boxes_outside_range
+          REMOVE_OUTSIDE_BOXES: True
+
+        - NAME: shuffle_points
+          SHUFFLE_ENABLED: {
+            'train': True,
+            'test': False
+          }
+
+        # Multi-scale voxelization (Paper: 0.16m, 0.32m, 0.64m)
+        - NAME: transform_points_to_voxels_multiscale
+          VOXEL_SIZES: [[0.16, 0.16, 4.0], [0.32, 0.32, 4.0], [0.64, 0.64, 4.0]]
+          MAX_POINTS_PER_VOXEL: [100, 200, 300]  # Paper: Scale 1, 2, 3
+          MAX_NUMBER_OF_VOXELS: {
+            'train': [12000, 8000, 6000],   # Paper specifications
+            'test': [20000, 15000, 10000]
+          }
+
+    DATA_AUGMENTOR:
+        DISABLE_AUG_LIST: ['placeholder']
+        AUG_CONFIG_LIST:
+            # Ground Truth Sampling (GT-AUG from paper)
+            - NAME: gt_sampling
+              USE_ROAD_PLANE: False
+              DB_INFO_PATH:
+                  - kitti_dbinfos_train.pkl
+              PREPARE: {
+                 filter_by_min_points: ['Car:5', 'Pedestrian:5', 'Cyclist:5'],
+                 filter_by_difficulty: [-1],
+              }
+              SAMPLE_GROUPS: ['Car:15','Pedestrian:15', 'Cyclist:15']
+              NUM_POINT_FEATURES: 4
+              DATABASE_WITH_FAKELIDAR: False
+              REMOVE_EXTRA_WIDTH: [0.0, 0.0, 0.0]
+              LIMIT_WHOLE_SCENE: False
+
+            # Global flipping (paper: flip along x-axis, 50% probability)
+            - NAME: random_world_flip
+              ALONG_AXIS_LIST: ['x']
+
+            # Global rotation (paper: [-π/4, π/4] = [-0.78539816, 0.78539816])
+            - NAME: random_world_rotation
+              WORLD_ROT_ANGLE: [-0.78539816, 0.78539816]
+
+            # Global scaling (paper: [0.95, 1.05])
+            - NAME: random_world_scaling
+              WORLD_SCALE_RANGE: [0.95, 1.05]
+
+
+MODEL:
+    NAME: VoxelFPN
+
+    VFE:
+        NAME: VoxelFPNVFE
+        # Multi-scale voxel sizes matching data processor
+        VOXEL_SIZES: [[0.16, 0.16, 4.0], [0.32, 0.32, 4.0], [0.64, 0.64, 4.0]]
+
+    BACKBONE_2D:
+        NAME: RPNFPNBackbone
+
+    DENSE_HEAD:
+        NAME: VoxelFPNHead
+        CLASS_AGNOSTIC: False
+
+        # Direction classifier (paper: resolves 180° ambiguity)
+        USE_DIRECTION_CLASSIFIER: True
+        DIR_OFFSET: 0.78539    # π/4
+        DIR_LIMIT_OFFSET: 0.0
+        NUM_DIR_BINS: 2
+
+        # Anchor configuration (Paper specifications)
+        ANCHOR_GENERATOR_CONFIG: [
+            {
+                'class_name': 'Car',
+                'anchor_sizes': [[3.9, 1.6, 1.5]],      # Paper: l=3.9m, w=1.6m, h=1.5m
+                'anchor_rotations': [0, 1.57],           # 0° and 90°
+                'anchor_bottom_heights': [-1.0],         # Paper: z_center = -1.0m (fixed)
+                'align_center': False,
+                'feature_map_stride': 2,                 # After downsampling in backbone
+                'matched_threshold': 0.6,
+                'unmatched_threshold': 0.45
+            },
+            {
+                'class_name': 'Pedestrian',
+                'anchor_sizes': [[0.8, 0.6, 1.73]],     # Paper: l=0.8m, w=0.6m, h=1.73m
+                'anchor_rotations': [0, 1.57],
+                'anchor_bottom_heights': [-0.6],         # Paper: z_center = -0.6m
+                'align_center': False,
+                'feature_map_stride': 2,
+                'matched_threshold': 0.5,
+                'unmatched_threshold': 0.35
+            },
+            {
+                'class_name': 'Cyclist',
+                'anchor_sizes': [[1.76, 0.6, 1.73]],    # Paper: l=1.76m, w=0.6m, h=1.73m
+                'anchor_rotations': [0, 1.57],
+                'anchor_bottom_heights': [-0.6],         # Paper: z_center = -0.6m
+                'align_center': False,
+                'feature_map_stride': 2,
+                'matched_threshold': 0.5,
+                'unmatched_threshold': 0.35
+            }
+        ]
+
+        TARGET_ASSIGNER_CONFIG:
+            NAME: AxisAlignedTargetAssigner
+            POS_FRACTION: -1.0
+            SAMPLE_SIZE: 512
+            NORM_BY_NUM_EXAMPLES: False
+            MATCH_HEIGHT: False
+            BOX_CODER: ResidualCoder
+
+        # Loss configuration (Paper: β₀=1.0, β₁=2.0, β₂=0.2)
+        LOSS_CONFIG:
+            LOSS_WEIGHTS: {
+                'cls_weight': 1.0,      # β₀ - Classification weight
+                'loc_weight': 2.0,      # β₁ - Localization weight (emphasized)
+                'dir_weight': 0.2,      # β₂ - Direction weight (auxiliary)
+                'code_weights': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+            }
+
+    POST_PROCESSING:
+        RECALL_THRESH_LIST: [0.3, 0.5, 0.7]
+        SCORE_THRESH: 0.1
+        OUTPUT_RAW_SCORE: False
+
+        EVAL_METRIC: kitti
+
+        NMS_CONFIG:
+            MULTI_CLASSES_NMS: False
+            NMS_TYPE: nms_gpu
+            NMS_THRESH: 0.01
+            NMS_PRE_MAXSIZE: 4096
+            NMS_POST_MAXSIZE: 500
+
+
+# Training configuration (Paper specifications)
+OPTIMIZATION:
+    BATCH_SIZE_PER_GPU: 2              # Paper: typical for 3D detection due to memory
+    NUM_EPOCHS: 160                     # Paper: 160 epochs
+
+    # Paper: Adam optimizer with lr=0.0002
+    # Using adam_onecycle for compatibility with OpenPCDet training loop
+    OPTIMIZER: adam_onecycle
+    LR: 0.0002                          # Paper: 0.0002 (peak learning rate)
+    WEIGHT_DECAY: 0.01
+    MOMENTUM: 0.9
+    
+    # OneCycle parameters
+    MOMS: [0.95, 0.85]                  # Momentum schedule for OneCycle
+    PCT_START: 0.4                      # Percent of cycle for learning rate increase
+    DIV_FACTOR: 10                      # Initial lr = LR / DIV_FACTOR
+    
+    # Legacy parameters (required by OpenPCDet even for adam_onecycle)
+    DECAY_STEP_LIST: [35, 45]
+    LR_DECAY: 0.1
+    LR_CLIP: 0.0000001
+    
+    LR_WARMUP: False
+    WARMUP_EPOCH: 1
+    
+    GRAD_NORM_CLIP: 10
+
+    # Alternative: Use exponential scheduler if supported
+    # LR_SCHEDULER: exponential
+    # EXPONENTIAL_GAMMA: 0.8
+    # EXPONENTIAL_STEP_SIZE: 15

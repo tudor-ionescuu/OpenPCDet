@@ -6,6 +6,7 @@ from .dynamic_voxel_vfe import DynamicVoxelVFE
 from .image_vfe import ImageVFE
 from .vfe_template import VFETemplate
 from .voxelnet_vfe import VoxelFeatureEncoderV2
+from .voxel_fpn_vfe import VoxelFPNVFE
 
 __all__ = {
     'VFETemplate': VFETemplate,
@@ -17,4 +18,5 @@ __all__ = {
     'DynPillarVFE': DynamicPillarVFE,
     'DynamicPillarVFESimple2D': DynamicPillarVFESimple2D,
     'DynamicVoxelVFE': DynamicVoxelVFE,
+    'VoxelFPNVFE': VoxelFPNVFE,
 }
