@@ -2,10 +2,10 @@
 #SBATCH --job-name=pp_ultra_nuscenes
 #SBATCH --output=logs/pointpillar_ultralight_nuscenes_%j.out
 #SBATCH --error=logs/pointpillar_ultralight_nuscenes_%j.err
-#SBATCH --time=48:00:00
+#SBATCH --time=96:00:00
 #SBATCH --gpus=1
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=64G
+#SBATCH --cpus-per-gpu=16
+#SBATCH --mem=128G
 #SBATCH --partition=batch
 #SBATCH --constraint=a100
 
@@ -25,8 +25,8 @@ export NUSCENES_DATA_PATH=/ibex/project/c2337/datasets/nuscenes
 # Train PointPillar Ultralight on nuScenes
 python train.py \
     --cfg_file cfgs/nuscenes_models/pointpillar_ultralight.yaml \
-    --batch_size 4 \
+    --batch_size 12 \
     --epochs 20 \
-    --workers 8
+    --workers 16
 
 echo "Training completed!"

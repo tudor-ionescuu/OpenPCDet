@@ -2,10 +2,10 @@
 #SBATCH --job-name=pp_nuscenes
 #SBATCH --output=logs/pointpillar_nuscenes_%j.out
 #SBATCH --error=logs/pointpillar_nuscenes_%j.err
-#SBATCH --time=48:00:00
+#SBATCH --time=96:00:00
 #SBATCH --gpus=1
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=64G
+#SBATCH --cpus-per-gpu=16
+#SBATCH --mem=128G
 #SBATCH --partition=batch
 #SBATCH --constraint=a100
 
@@ -27,6 +27,6 @@ python train.py \
     --cfg_file cfgs/nuscenes_models/pointpillar.yaml \
     --batch_size 4 \
     --epochs 20 \
-    --workers 8
+    --workers 16
 
 echo "Training completed!"
