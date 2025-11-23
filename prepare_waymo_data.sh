@@ -20,6 +20,7 @@ source ~/Code/openpcdet_project/openpcdet-env/bin/activate
 # Install required packages for Waymo dataset processing
 echo "Installing TensorFlow and Waymo Open Dataset with compatible versions..."
 pip install numpy==1.23.5
+pip install protobuf==3.20.3
 pip install tensorflow==2.13.0
 pip install waymo-open-dataset-tf-2-12-0
 pip install typing-extensions==4.12.2
