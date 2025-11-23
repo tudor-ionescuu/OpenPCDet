@@ -29,15 +29,24 @@ cd ~/Code/openpcdet_project/OpenPCDet
 
 echo "Setting up Waymo dataset symlinks..."
 
-# Remove old waymo directory if it exists
-if [ -d "data/waymo/raw_data" ]; then
+# Remove old raw_data if it exists
+if [ -L "data/waymo/raw_data" ] || [ -d "data/waymo/raw_data" ]; then
     rm -rf data/waymo/raw_data
 fi
 
-# Create raw_data symlink to individual_files
-ln -sf /ibex/project/c2337/datasets/waymo/individual_files data/waymo/raw_data
+# Create raw_data directory
+mkdir -p data/waymo/raw_data
 
-echo "Symlink created: data/waymo/raw_data -> /ibex/project/c2337/datasets/waymo/individual_files"
+# Create symlinks to training and validation tfrecords directly in raw_data
+echo "Linking training tfrecords..."
+ln -sf /ibex/project/c2337/datasets/waymo/individual_files/training/segment-*.tfrecord data/waymo/raw_data/
+
+echo "Linking validation tfrecords..."
+ln -sf /ibex/project/c2337/datasets/waymo/individual_files/validation/segment-*.tfrecord data/waymo/raw_data/
+
+echo "Symlinks created in data/waymo/raw_data/"
+ls data/waymo/raw_data/ | wc -l
+echo "tfrecord files linked"
 
 # Change to tools directory
 cd tools
