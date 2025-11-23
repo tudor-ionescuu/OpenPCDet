@@ -35,6 +35,9 @@ if [ -L "data/waymo/raw_data" ] || [ -d "data/waymo/raw_data" ]; then
     rm -rf data/waymo/raw_data
 fi
 
+# Remove any existing processed data symlinks/dirs
+rm -rf data/waymo/waymo_processed_data_v0_5_0*
+
 # Create raw_data directory
 mkdir -p data/waymo/raw_data
 
@@ -51,6 +54,8 @@ echo "tfrecord files linked"
 
 # Create processed data directory in ibex (large storage) and symlink it
 echo "Setting up processed data directory in ibex storage..."
+mkdir -p /ibex/project/c2337/datasets/waymo/processed
+rm -rf /ibex/project/c2337/datasets/waymo/processed/waymo_processed_data_v0_5_0
 mkdir -p /ibex/project/c2337/datasets/waymo/processed/waymo_processed_data_v0_5_0
 ln -sf /ibex/project/c2337/datasets/waymo/processed/waymo_processed_data_v0_5_0 data/waymo/waymo_processed_data_v0_5_0
 
