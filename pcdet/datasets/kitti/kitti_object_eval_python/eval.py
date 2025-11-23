@@ -3,7 +3,86 @@ import io as sysio
 import numba
 import numpy as np
 
-from .rotate_iou import rotate_iou_gpu_eval
+try:
+    from .rotate_iou import rotate_iou_gpu_eval
+    USE_GPU_IOU = True
+except Exception as e:
+    print(f"Warning: GPU IOU not available ({e}), falling back to CPU")
+    USE_GPU_IOU = False
+    # Simple CPU fallback for rotate_iou
+    def rotate_iou_gpu_eval(boxes, query_boxes, criterion=-1, device_id=0):
+        """CPU fallback for rotated box IoU - handles both BEV (5D) and full (7D) box formats"""
+        import cv2
+        
+        N = boxes.shape[0]
+        K = query_boxes.shape[0]
+        iou = np.zeros((N, K), dtype=np.float32)
+        
+        for i in range(N):
+            for j in range(K):
+                box1 = boxes[i]
+                box2 = query_boxes[j]
+                
+                # Detect format and extract parameters
+                # BEV format (5D): [x, z, length, width, rotation_y]
+                # Full format (7D): [x, y, z, l, w, h, rotation_y]
+                if len(box1) == 5:
+                    # BEV format
+                    center1 = (float(box1[0]), float(box1[1]))
+                    size1 = (float(box1[2]), float(box1[3]))
+                    angle1 = float(np.degrees(box1[4]))
+                    area1 = box1[2] * box1[3]
+                elif len(box1) == 7:
+                    # Full 7D format
+                    center1 = (float(box1[0]), float(box1[1]))
+                    size1 = (float(box1[3]), float(box1[4]))
+                    angle1 = float(np.degrees(box1[6]))
+                    area1 = box1[3] * box1[4]
+                else:
+                    iou[i, j] = 0.0
+                    continue
+                
+                if len(box2) == 5:
+                    center2 = (float(box2[0]), float(box2[1]))
+                    size2 = (float(box2[2]), float(box2[3]))
+                    angle2 = float(np.degrees(box2[4]))
+                    area2 = box2[2] * box2[3]
+                elif len(box2) == 7:
+                    center2 = (float(box2[0]), float(box2[1]))
+                    size2 = (float(box2[3]), float(box2[4]))
+                    angle2 = float(np.degrees(box2[6]))
+                    area2 = box2[3] * box2[4]
+                else:
+                    iou[i, j] = 0.0
+                    continue
+                
+                # Create OpenCV rotated rectangles
+                rect1 = (center1, size1, angle1)
+                rect2 = (center2, size2, angle2)
+                
+                # Calculate intersection
+                try:
+                    ret, intersection = cv2.rotatedRectangleIntersection(rect1, rect2)
+                    
+                    if ret == cv2.INTERSECT_NONE:
+                        iou[i, j] = 0.0
+                    else:
+                        intersection_area = cv2.contourArea(intersection)
+                        
+                        if criterion == -1:  # IoU
+                            union_area = area1 + area2 - intersection_area
+                        elif criterion == 0:  # intersection / area1
+                            union_area = area1
+                        elif criterion == 1:  # intersection / area2
+                            union_area = area2
+                        else:
+                            union_area = 1.0
+                        
+                        iou[i, j] = intersection_area / union_area if union_area > 0 else 0.0
+                except Exception:
+                    iou[i, j] = 0.0
+        
+        return iou
 
 
 @numba.jit

@@ -24,11 +24,12 @@ cd ~/Code/openpcdet_project/OpenPCDet/tools
 export NUSCENES_DATA_PATH=/ibex/project/c2337/datasets/nuscenes
 
 # Test PointPillar Lite
-echo "Testing PointPillar Lite..."
+echo "Testing PointPillar Lite on nuScenes..."
 python test.py \
     --cfg_file cfgs/nuscenes_models/pointpillar_lite.yaml \
     --batch_size 1 \
     --ckpt ../output/nuscenes_models/pointpillar_lite/default/ckpt/checkpoint_epoch_20.pth \
-    --infer_time
+    --infer_time \
+    2>&1 | tee ../logs/test_pointpillar_lite_nuscenes_full.txt
 
-echo "Test completed!"
+echo "Test completed! Full log saved to logs/test_pointpillar_lite_nuscenes_full.txt"
