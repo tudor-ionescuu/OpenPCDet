@@ -49,6 +49,13 @@ echo "Symlinks created in data/waymo/raw_data/"
 ls data/waymo/raw_data/ | wc -l
 echo "tfrecord files linked"
 
+# Create processed data directory in ibex (large storage) and symlink it
+echo "Setting up processed data directory in ibex storage..."
+mkdir -p /ibex/project/c2337/datasets/waymo/processed/waymo_processed_data_v0_5_0
+ln -sf /ibex/project/c2337/datasets/waymo/processed/waymo_processed_data_v0_5_0 data/waymo/waymo_processed_data_v0_5_0
+
+echo "Processed data will be saved to: /ibex/project/c2337/datasets/waymo/processed/"
+
 # Change to tools directory
 cd tools
 
