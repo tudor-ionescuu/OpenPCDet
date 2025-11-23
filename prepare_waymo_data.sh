@@ -17,6 +17,11 @@ module load cuda/11.8.0
 # Activate virtual environment
 source ~/Code/openpcdet_project/openpcdet-env/bin/activate
 
+# Install required packages for Waymo dataset processing
+echo "Installing TensorFlow and Waymo Open Dataset..."
+pip install tensorflow==2.11.0
+pip install waymo-open-dataset-tf-2-11-0
+
 # Change to OpenPCDet directory
 cd ~/Code/openpcdet_project/OpenPCDet
 
