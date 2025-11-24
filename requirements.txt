@@ -1,13 +1,32 @@
-numpy
-llvmlite
-numba
-torch>=1.1
-tensorboardX
-easydict
-pyyaml
-scikit-image
-tqdm
-torchvision
-SharedArray
-opencv-python
-pyquaternion
+# Core dependencies - VERIFIED WORKING on IBEX A100 nodes with CUDA 12.8
+# Environment snapshot from check_environment.sh on Nov 24, 2025
+
+# Numpy (IMPORTANT: must match pickle file generation version)
+numpy==1.23.5
+
+# Numba and LLVM for CUDA kernels
+llvmlite==0.43.0
+numba==0.60.0
+
+# PyTorch with CUDA 12.8 support
+torch==2.8.0
+torchvision==0.23.0
+
+# spconv for sparse 3D convolutions (CUDA 12.1 compatible)
+spconv-cu121==2.3.8
+
+# Additional dependencies
+tensorboardX==2.6.4
+easydict==1.13
+pyyaml==6.0.3
+scikit-image==0.20.0
+tqdm==4.67.1
+SharedArray==3.2.4
+opencv-python==4.12.0.88
+pyquaternion==0.9.9
+pillow==9.2.0
+setuptools==67.6.0
+
+# Data processing
+pandas==1.5.3
+scipy==1.9.1
