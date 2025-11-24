@@ -11,21 +11,53 @@ This branch (`feature/adaptive-routing`) contains three PointPillar variants for
 - Python 3.9 environment
 - CUDA-capable GPU (A100 recommended)
 
+## Project Structure
+
+After setup, your project directory should look like this:
+
+```
+openpcdet_project/
+├── OpenPCDet/                          # Main repository
+│   ├── data/
+│   │   └── kitti/                      # Symlink to /ibex/project/c2337/openpcdet_data/kitti
+│   ├── pretrained_models/
+│   │   └── kitti/
+│   │       ├── pointpillar_full.pth
+│   │       ├── pointpillar_lite.pth
+│   │       └── pointpillar_ultralight.pth
+│   ├── tools/
+│   │   └── cfgs/
+│   │       └── kitti_models/
+│   │           ├── pointpillar.yaml
+│   │           ├── pointpillar_lite.yaml
+│   │           └── pointpillar_ultralight.yaml
+│   ├── logs/                           # SLURM job logs
+│   ├── output/                         # Test results
+│   ├── test_pointpillar_full_kitti.sh
+│   ├── test_pointpillar_lite_kitti.sh
+│   ├── test_pointpillar_ultralight_kitti.sh
+│   ├── check_environment.sh
+│   ├── requirements.txt
+│   └── setup.py
+└── openpcdet-env/                      # Python virtual environment
+```
+
 ## Installation Steps
 
 ### 1. Clone the Repository
 ```bash
-mkdir openpcdet-project
-git clone -b adaptive-routing --single-branch https://github.com/tudor-ionescu/OpenPCDet.git
+mkdir -p openpcdet_project
+cd openpcdet_project
+git clone -b feature/adaptive-routing https://github.com/tudor-ionescu/OpenPCDet.git
 cd OpenPCDet
-git checkout feature/adaptive-routing
 ```
 
 ### 2. Create Virtual Environment
 ```bash
-cd openpcdet-project
+cd ../
 python3.9 -m venv openpcdet-env
 source openpcdet-env/bin/activate
+cd OpenPCDet
 ```
 
 ### 3. Install Dependencies
@@ -55,16 +87,32 @@ sbatch check_environment.sh
 - **numba 0.60.0** with llvmlite 0.43.0 for CUDA kernels
 - All versions in requirements.txt are verified working on IBEX A100 nodes
 
+### 6. Download Pretrained Models
+Download the pretrained models from Google Drive and organize them:
+```bash
+# Create directory for pretrained models
+mkdir -p pretrained_models/kitti
+
+# Download models from:
+# https://drive.google.com/drive/folders/1iq-gO2qJHB7DKV5et6Wy0GNjzOosdka2?usp=sharing
+# 
+# Place the following files in pretrained_models/kitti/:
+# - pointpillar_full.pth (19MB)
+# - pointpillar_lite.pth (9.7MB)
+# - pointpillar_ultralight.pth (2.0MB)
+```
+
 ### 7. Set Up KITTI Data
 The KITTI data is stored in shared IBEX storage. Create a symlink:
 ```bash
-cd ~/Code/openpcdet_project/OpenPCDet/data
+cd data
 ln -s /ibex/project/c2337/openpcdet_data/kitti kitti
+cd ..
 ```
 
 Verify the symlink:
 ```bash
-ls -la ~/Code/openpcdet_project/OpenPCDet/data/kitti
+ls -la data/kitti
 ```
 
 You should see the following structure:
@@ -87,19 +135,16 @@ All three PointPillar variants are ready to test with pretrained models.
 
 ### Test PointPillar Full
 ```bash
-cd ~/Code/openpcdet_project/OpenPCDet
 sbatch test_pointpillar_full_kitti.sh
 ```
 
 ### Test PointPillar Lite
 ```bash
-cd ~/Code/openpcdet_project/OpenPCDet
 sbatch test_pointpillar_lite_kitti.sh
 ```
 
 ### Test PointPillar Ultralight
 ```bash
-cd ~/Code/openpcdet_project/OpenPCDet
 sbatch test_pointpillar_ultralight_kitti.sh
 ```
 
@@ -146,14 +191,14 @@ KITTI validation set results (Car 3D AP at IoU=0.7):
 
 ### Issue: CUDA library not found
 ```bash
-export LD_LIBRARY_PATH=~/Code/openpcdet_project/openpcdet-env/lib/python3.9/site-packages/nvidia/cuda_nvcc/nvvm/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=../openpcdet-env/lib/python3.9/site-packages/nvidia/cuda_nvcc/nvvm/lib64:$LD_LIBRARY_PATH
 export NUMBA_CUDA_DRIVER=0
 ```
 
 ### Issue: Data not found
 Verify the symlink exists:
 ```bash
-readlink -f ~/Code/openpcdet_project/OpenPCDet/data/kitti
+readlink -f data/kitti
 ```
 Should output: `/ibex/project/c2337/openpcdet_data/kitti`
 
