@@ -52,12 +52,18 @@ echo "Symlinks created in data/waymo/raw_data/"
 ls data/waymo/raw_data/ | wc -l
 echo "tfrecord files linked"
 
-# Create processed data directory in ibex (large storage) and symlink it
-echo "Setting up processed data directory in ibex storage..."
-mkdir -p /ibex/scratch/ionesctn/waymo_processed/waymo_processed_data_v0_5_0
-ln -sf /ibex/scratch/ionesctn/waymo_processed/waymo_processed_data_v0_5_0 data/waymo/waymo_processed_data_v0_5_0
+# Create processed data directory in ibex project storage (30TB available) and symlink it
+echo "Setting up processed data directory in ibex project storage..."
+mkdir -p /ibex/project/c2337/openpcdet_data/waymo_processed/waymo_processed_data_v0_5_0
+ln -sf /ibex/project/c2337/openpcdet_data/waymo_processed/waymo_processed_data_v0_5_0 data/waymo/waymo_processed_data_v0_5_0
 
-echo "Processed data will be saved to: /ibex/scratch/ionesctn/waymo_processed/"
+# Also symlink GT database directories to ibex storage
+mkdir -p /ibex/project/c2337/openpcdet_data/waymo_processed/gt_database_train
+mkdir -p /ibex/project/c2337/openpcdet_data/waymo_processed/gt_database_train_multiframe
+ln -sf /ibex/project/c2337/openpcdet_data/waymo_processed/gt_database_train data/waymo/waymo_processed_data_v0_5_0_gt_database_train_sampled_1
+ln -sf /ibex/project/c2337/openpcdet_data/waymo_processed/gt_database_train_multiframe data/waymo/waymo_processed_data_v0_5_0_gt_database_train_sampled_1_multiframe_-4_to_0
+
+echo "Processed data will be saved to: /ibex/project/c2337/openpcdet_data/waymo_processed/"
 
 # Change to tools directory
 cd tools
