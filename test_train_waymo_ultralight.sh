@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=pp_waymo_test_full
+#SBATCH --job-name=pp_waymo_test_ultra
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --constraint=a100
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32GB
 #SBATCH --time=2:00:00
-#SBATCH --output=logs/test_waymo_full_%j.out
-#SBATCH --error=logs/test_waymo_full_%j.err
+#SBATCH --output=logs/test_waymo_ultra_%j.out
+#SBATCH --error=logs/test_waymo_ultra_%j.err
 #SBATCH --account=pi-shokera
 
 # Load modules
@@ -23,13 +23,13 @@ cd ~/Code/openpcdet_project/OpenPCDet/tools
 # Set Waymo dataset path
 export WAYMO_DATA_PATH=/ibex/project/c2337/datasets/waymo
 
-# Quick test training with PointPillar Full (2 epochs only)
-echo "Starting quick test training of PointPillar Full on Waymo (2 epochs)..."
+# Quick test training with PointPillar Ultralight (2 epochs only)
+echo "Starting quick test training of PointPillar Ultralight on Waymo (2 epochs)..."
 python train.py \
-    --cfg_file cfgs/waymo_models/pointpillar_1x.yaml \
+    --cfg_file cfgs/waymo_models/pointpillar_ultralight.yaml \
     --batch_size 2 \
     --epochs 2 \
     --workers 8 \
-    --extra_tag waymo_full_test
+    --extra_tag waymo_ultralight_test
 
 echo "Test training completed!"

@@ -15,11 +15,11 @@ DATA_CONFIG:
             }
 
         -   NAME: transform_points_to_voxels
-            VOXEL_SIZE: [ 0.64, 0.64, 6.0 ]  # 2x larger voxels than full
+            VOXEL_SIZE: [ 0.32, 0.32, 6.0 ]  # Same as full for spatial consistency
             MAX_POINTS_PER_VOXEL: 12  # Drastically reduced from 20
             MAX_NUMBER_OF_VOXELS: {
-                'train': 60000,  # Drastically reduced from 150000
-                'test': 60000
+                'train': 80000,  # Drastically reduced from 150000
+                'test': 80000
             }
 
 
