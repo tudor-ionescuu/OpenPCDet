@@ -68,15 +68,26 @@ pip install -r requirements.txt
 ```
 
 ### 4. Build and Install OpenPCDet
+The build process requires GPU access to compile CUDA extensions. Submit a build job:
 ```bash
-python setup.py develop
+# Create logs directory
+mkdir -p logs
+
+# Submit build job to GPU node
+sbatch build_openpcdet.sh
+
+# Monitor the job
+squeue -u $USER
+
+# Check build output (once job completes)
+tail logs/build_openpcdet_<JOB_ID>.out
 ```
 
 ### 5. Verify Installation
-Run the environment check to verify everything is installed correctly:
+Once the build job completes successfully, verify the installation:
 ```bash
-sbatch check_environment.sh
-# Check the output in logs/check_environment_<JOB_ID>.out
+# Check that pcdet can be imported
+python -c "import pcdet; print('OpenPCDet installed successfully!')"
 ```
 
 **Important Notes**:
@@ -85,6 +96,7 @@ sbatch check_environment.sh
 - **numpy 1.23.5** - CRITICAL: Do not upgrade numpy, as the KITTI pickle files are generated with this version
 - **spconv-cu121 2.3.8** for sparse 3D convolutions
 - **numba 0.60.0** with llvmlite 0.43.0 for CUDA kernels
+- **Building requires GPU access** - CUDA extensions must be compiled on a GPU node
 - All versions in requirements.txt are verified working on IBEX A100 nodes
 
 ### 6. Download Pretrained Models
