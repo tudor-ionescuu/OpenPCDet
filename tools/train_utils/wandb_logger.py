@@ -53,31 +53,38 @@ class WandbLogger:
             self.logger.warning(f"Failed to initialize wandb: {e}")
             self.enabled = False
     
-    def log_metrics(self, metrics_dict, step):
+    def log_metrics(self, metrics_dict, step, epoch=None):
         """Log metrics to wandb"""
         if not self.enabled:
             return
         try:
+            # Add epoch to metrics if provided
+            if epoch is not None:
+                metrics_dict['epoch'] = epoch
             wandb.log(metrics_dict, step=step)
         except Exception as e:
             self.logger.warning(f"Failed to log to wandb: {e}")
     
-    def log_epoch_metrics(self, epoch, train_loss, val_metrics=None):
+    def log_epoch_metrics(self, epoch, train_loss, lr=None, additional_metrics=None):
         """Log epoch-level metrics"""
         if not self.enabled:
             return
         
         metrics = {
             "epoch": epoch,
-            "train/epoch_loss": train_loss,
+            "epoch_summary/train_loss": train_loss,
         }
         
-        if val_metrics:
-            for key, val in val_metrics.items():
-                metrics[f"val/{key}"] = val
+        if lr is not None:
+            metrics["epoch_summary/learning_rate"] = lr
+        
+        if additional_metrics:
+            for key, val in additional_metrics.items():
+                metrics[f"epoch_summary/{key}"] = val
         
         try:
-            wandb.log(metrics, step=epoch)
+            wandb.log(metrics)
+            self.logger.info(f"Epoch {epoch} metrics logged to wandb")
         except Exception as e:
             self.logger.warning(f"Failed to log epoch metrics: {e}")
     

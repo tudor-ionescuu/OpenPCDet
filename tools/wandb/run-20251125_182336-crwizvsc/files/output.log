@@ -1,0 +1,309 @@
+2025-11-25 18:23:38,685   INFO  Wandb initialized: pointpillar_lite_waymo_lite
+2025-11-25 18:23:38,685   INFO  Wandb URL: https://wandb.ai/tudor-ionescu-kaust/pointpillars-waymo/runs/crwizvsc
+2025-11-25 18:23:38,685   INFO  Early stopping initialized with patience=7, min_delta=0.001, mode=min
+2025-11-25 18:23:38,686   INFO  Early stopping enabled with patience=7
+2025-11-25 18:23:38,686   INFO  ----------- Create dataloader & network & optimizer -----------
+2025-11-25 18:23:55,829   INFO  Database filter by min points Vehicle: 1194364 => 1019919
+2025-11-25 18:23:55,972   INFO  Database filter by min points Pedestrian: 1114091 => 943716
+2025-11-25 18:23:55,986   INFO  Database filter by min points Cyclist: 53344 => 47529
+2025-11-25 18:23:56,134   INFO  Database filter by difficulty Vehicle: 1019919 => 1019919
+2025-11-25 18:23:56,271   INFO  Database filter by difficulty Pedestrian: 943716 => 943716
+2025-11-25 18:23:56,278   INFO  Database filter by difficulty Cyclist: 47529 => 47529
+2025-11-25 18:23:56,610   INFO  Loading Waymo dataset
+2025-11-25 18:24:05,190   INFO  Total skipped info 0
+2025-11-25 18:24:05,190   INFO  Total samples for Waymo dataset: 158081
+2025-11-25 18:24:05,194   INFO  Total sampled samples for Waymo dataset: 31617
+/home/ionesctn/Code/openpcdet_project/openpcdet-env/lib64/python3.9/site-packages/torch/functional.py:554: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4322.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+2025-11-25 18:24:06,784   INFO  ----------- Model PointPillar created, param count: 839576 -----------
+2025-11-25 18:24:06,784   INFO  PointPillar(
+  (vfe): PillarVFE(
+    (pfn_layers): ModuleList(
+      (0): PFNLayer(
+        (linear): Linear(in_features=11, out_features=16, bias=False)
+        (norm): BatchNorm1d(16, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+      )
+      (1): PFNLayer(
+        (linear): Linear(in_features=32, out_features=32, bias=False)
+        (norm): BatchNorm1d(32, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+      )
+    )
+  )
+  (backbone_3d): None
+  (map_to_bev_module): PointPillarScatter()
+  (pfe): None
+  (backbone_2d): BaseBEVBackbone(
+    (blocks): ModuleList(
+      (0): Sequential(
+        (0): ZeroPad2d((1, 1, 1, 1))
+        (1): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), bias=False)
+        (2): BatchNorm2d(32, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (3): ReLU()
+        (4): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (5): BatchNorm2d(32, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (6): ReLU()
+        (7): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (8): BatchNorm2d(32, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (9): ReLU()
+      )
+      (1): Sequential(
+        (0): ZeroPad2d((1, 1, 1, 1))
+        (1): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), bias=False)
+        (2): BatchNorm2d(64, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (3): ReLU()
+        (4): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (5): BatchNorm2d(64, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (6): ReLU()
+        (7): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (8): BatchNorm2d(64, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (9): ReLU()
+        (10): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (11): BatchNorm2d(64, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (12): ReLU()
+      )
+      (2): Sequential(
+        (0): ZeroPad2d((1, 1, 1, 1))
+        (1): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), bias=False)
+        (2): BatchNorm2d(128, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (3): ReLU()
+        (4): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (5): BatchNorm2d(128, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (6): ReLU()
+        (7): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (8): BatchNorm2d(128, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (9): ReLU()
+        (10): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (11): BatchNorm2d(128, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (12): ReLU()
+      )
+    )
+    (deblocks): ModuleList(
+      (0): Sequential(
+        (0): ConvTranspose2d(32, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (1): BatchNorm2d(64, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (2): ReLU()
+      )
+      (1): Sequential(
+        (0): ConvTranspose2d(64, 64, kernel_size=(2, 2), stride=(2, 2), bias=False)
+        (1): BatchNorm2d(64, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (2): ReLU()
+      )
+      (2): Sequential(
+        (0): ConvTranspose2d(128, 64, kernel_size=(4, 4), stride=(4, 4), bias=False)
+        (1): BatchNorm2d(64, eps=0.001, momentum=0.01, affine=True, track_running_stats=True)
+        (2): ReLU()
+      )
+    )
+  )
+  (dense_head): AnchorHeadSingle(
+    (cls_loss_func): SigmoidFocalClassificationLoss()
+    (reg_loss_func): WeightedSmoothL1Loss()
+    (dir_loss_func): WeightedCrossEntropyLoss()
+    (conv_cls): Conv2d(192, 18, kernel_size=(1, 1), stride=(1, 1))
+    (conv_box): Conv2d(192, 42, kernel_size=(1, 1), stride=(1, 1))
+    (conv_dir_cls): Conv2d(192, 12, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (point_head): None
+  (roi_head): None
+)
+2025-11-25 18:24:06,785   INFO  **********************Start training waymo_models/pointpillar_lite(waymo_lite)**********************
+epochs:   0%|          | 0/30 [00:00<?, ?it/s]/home/ionesctn/Code/openpcdet_project/OpenPCDet/tools/train_utils/train_utils.py:22: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = torch.cuda.amp.GradScaler(enabled=use_amp, init_scale=optim_cfg.get('LOSS_SCALE_FP16', 2.0**16))
+                                                /home/ionesctn/Code/openpcdet_project/OpenPCDet/tools/train_utils/train_utils.py:56: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=use_amp):
+2025-11-25 18:24:14,363   INFO  Train:    1/30 (  3%) [   0/15809 (  0%)]  Loss: 4.010 (4.01)  LR: 3.000e-04  Time cost: 00:04/19:48:20 [00:07/594:10:27]  Acc_iter 1           Data time: 1.51(1.51)  Forward time: 3.00(3.00)  Batch time: 4.51(4.51)
+2025-11-25 18:24:19,082   INFO  Train:    1/30 (  3%) [  49/15809 (  0%)]  Loss: 3.797 (2.98)  LR: 3.000e-04  Time cost: 00:09/48:28 [00:12/24:18:52]  Acc_iter 50          Data time: 0.00(0.04)  Forward time: 0.11(0.15)  Batch time: 0.12(0.18)
+2025-11-25 18:24:23,844   INFO  Train:    1/30 (  3%) [  99/15809 (  1%)]  Loss: 2.847 (2.83)  LR: 3.000e-04  Time cost: 00:13/36:37 [00:17/18:25:39]  Acc_iter 100         Data time: 0.01(0.02)  Forward time: 0.10(0.12)  Batch time: 0.11(0.14)
+2025-11-25 18:24:28,393   INFO  Train:    1/30 (  3%) [ 149/15809 (  1%)]  Loss: 2.393 (2.76)  LR: 3.000e-04  Time cost: 00:18/32:15 [00:21/16:16:42]  Acc_iter 150         Data time: 0.00(0.02)  Forward time: 0.09(0.11)  Batch time: 0.09(0.12)
+2025-11-25 18:24:28,676   INFO
+2025-11-25 18:24:33,438   INFO  Train:    1/30 (  3%) [ 199/15809 (  1%)]  Loss: 2.086 (2.73)  LR: 3.000e-04  Time cost: 00:23/30:40 [00:26/15:31:45]  Acc_iter 200         Data time: 0.00(0.01)  Forward time: 0.08(0.10)  Batch time: 0.08(0.12)
+2025-11-25 18:24:38,058   INFO  Train:    1/30 (  3%) [ 249/15809 (  2%)]  Loss: 2.129 (2.67)  LR: 3.000e-04  Time cost: 00:28/29:15 [00:31/14:51:18]  Acc_iter 250         Data time: 0.00(0.01)  Forward time: 0.08(0.10)  Batch time: 0.09(0.11)
+2025-11-25 18:24:42,778   INFO  Train:    1/30 (  3%) [ 299/15809 (  2%)]  Loss: 2.230 (2.63)  LR: 3.000e-04  Time cost: 00:32/28:22 [00:35/14:26:57]  Acc_iter 300         Data time: 0.01(0.01)  Forward time: 0.08(0.10)  Batch time: 0.09(0.11)
+2025-11-25 18:24:43,044   INFO
+2025-11-25 18:24:47,963   INFO  Train:    1/30 (  3%) [ 349/15809 (  2%)]  Loss: 2.173 (2.60)  LR: 3.000e-04  Time cost: 00:38/28:03 [00:41/14:20:02]  Acc_iter 350         Data time: 0.01(0.01)  Forward time: 0.09(0.10)  Batch time: 0.09(0.11)
+2025-11-25 18:24:52,649   INFO  Train:    1/30 (  3%) [ 399/15809 (  3%)]  Loss: 2.248 (2.56)  LR: 3.000e-04  Time cost: 00:42/27:28 [00:45/14:04:59]  Acc_iter 400         Data time: 0.00(0.01)  Forward time: 0.07(0.10)  Batch time: 0.08(0.11)
+2025-11-25 18:24:57,436   INFO  Train:    1/30 (  3%) [ 449/15809 (  3%)]  Loss: 2.036 (2.51)  LR: 3.000e-04  Time cost: 00:47/27:04 [00:50/13:55:01]  Acc_iter 450         Data time: 0.00(0.01)  Forward time: 0.08(0.10)  Batch time: 0.09(0.11)
+2025-11-25 18:24:57,715   INFO
+2025-11-25 18:25:02,499   INFO  Train:    1/30 (  3%) [ 499/15809 (  3%)]  Loss: 1.800 (2.48)  LR: 3.000e-04  Time cost: 00:52/26:52 [00:55/13:51:24]  Acc_iter 500         Data time: 0.01(0.01)  Forward time: 0.10(0.10)  Batch time: 0.10(0.11)
+2025-11-25 18:25:07,239   INFO  Train:    1/30 (  3%) [ 549/15809 (  3%)]  Loss: 2.721 (2.45)  LR: 3.001e-04  Time cost: 00:57/26:32 [01:00/13:43:46]  Acc_iter 550         Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:25:11,888   INFO  Train:    1/30 (  3%) [ 599/15809 (  4%)]  Loss: 1.802 (2.42)  LR: 3.001e-04  Time cost: 01:02/26:12 [01:05/13:36:13]  Acc_iter 600         Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:25:12,167   INFO
+2025-11-25 18:25:16,936   INFO  Train:    1/30 (  3%) [ 649/15809 (  4%)]  Loss: 2.148 (2.40)  LR: 3.001e-04  Time cost: 01:07/26:04 [01:10/13:34:39]  Acc_iter 650         Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:25:21,737   INFO  Train:    1/30 (  3%) [ 699/15809 (  4%)]  Loss: 1.957 (2.36)  LR: 3.001e-04  Time cost: 01:11/25:51 [01:14/13:30:31]  Acc_iter 700         Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:25:26,366   INFO  Train:    1/30 (  3%) [ 749/15809 (  5%)]  Loss: 2.274 (2.34)  LR: 3.001e-04  Time cost: 01:16/25:36 [01:19/13:25:07]  Acc_iter 750         Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:25:26,664   INFO
+2025-11-25 18:25:31,493   INFO  Train:    1/30 (  3%) [ 799/15809 (  5%)]  Loss: 1.560 (2.32)  LR: 3.001e-04  Time cost: 01:21/25:31 [01:24/13:25:17]  Acc_iter 800         Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:25:36,307   INFO  Train:    1/30 (  3%) [ 849/15809 (  5%)]  Loss: 1.629 (2.29)  LR: 3.001e-04  Time cost: 01:26/25:21 [01:29/13:22:32]  Acc_iter 850         Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.07(0.10)
+2025-11-25 18:25:41,073   INFO  Train:    1/30 (  3%) [ 899/15809 (  6%)]  Loss: 1.630 (2.27)  LR: 3.001e-04  Time cost: 01:31/25:11 [01:34/13:19:38]  Acc_iter 900         Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:25:41,361   INFO
+2025-11-25 18:25:46,059   INFO  Train:    1/30 (  3%) [ 949/15809 (  6%)]  Loss: 1.761 (2.25)  LR: 3.002e-04  Time cost: 01:36/25:04 [01:39/13:18:53]  Acc_iter 950         Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:25:50,826   INFO  Train:    1/30 (  3%) [ 999/15809 (  6%)]  Loss: 1.909 (2.23)  LR: 3.002e-04  Time cost: 01:40/24:55 [01:44/13:16:27]  Acc_iter 1000        Data time: 0.01(0.01)  Forward time: 0.12(0.09)  Batch time: 0.12(0.10)
+2025-11-25 18:25:55,825   INFO  Train:    1/30 (  3%) [1049/15809 (  7%)]  Loss: 1.680 (2.21)  LR: 3.002e-04  Time cost: 01:45/24:49 [01:49/13:16:00]  Acc_iter 1050        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:25:56,106   INFO
+2025-11-25 18:26:00,792   INFO  Train:    1/30 (  3%) [1099/15809 (  7%)]  Loss: 1.766 (2.20)  LR: 3.002e-04  Time cost: 01:50/24:43 [01:54/13:15:21]  Acc_iter 1100        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:26:05,547   INFO  Train:    1/30 (  3%) [1149/15809 (  7%)]  Loss: 1.724 (2.18)  LR: 3.002e-04  Time cost: 01:55/24:34 [01:58/13:13:17]  Acc_iter 1150        Data time: 0.00(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:26:10,353   INFO  Train:    1/30 (  3%) [1199/15809 (  8%)]  Loss: 1.632 (2.17)  LR: 3.003e-04  Time cost: 02:00/24:27 [02:03/13:11:44]  Acc_iter 1200        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:26:10,648   INFO
+2025-11-25 18:26:15,359   INFO  Train:    1/30 (  3%) [1249/15809 (  8%)]  Loss: 1.640 (2.15)  LR: 3.003e-04  Time cost: 02:05/24:21 [02:08/13:11:33]  Acc_iter 1250        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:26:20,057   INFO  Train:    1/30 (  3%) [1299/15809 (  8%)]  Loss: 1.702 (2.14)  LR: 3.003e-04  Time cost: 02:10/24:13 [02:13/13:09:31]  Acc_iter 1300        Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:26:24,673   INFO  Train:    1/30 (  3%) [1349/15809 (  9%)]  Loss: 1.641 (2.12)  LR: 3.003e-04  Time cost: 02:14/24:04 [02:17/13:07:09]  Acc_iter 1350        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:26:24,954   INFO
+2025-11-25 18:26:29,601   INFO  Train:    1/30 (  3%) [1399/15809 (  9%)]  Loss: 1.692 (2.11)  LR: 3.004e-04  Time cost: 02:19/23:58 [02:22/13:06:41]  Acc_iter 1400        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:26:34,331   INFO  Train:    1/30 (  3%) [1449/15809 (  9%)]  Loss: 2.022 (2.09)  LR: 3.004e-04  Time cost: 02:24/23:50 [02:27/13:05:11]  Acc_iter 1450        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:26:39,082   INFO  Train:    1/30 (  3%) [1499/15809 (  9%)]  Loss: 2.025 (2.08)  LR: 3.004e-04  Time cost: 02:29/23:43 [02:32/13:03:54]  Acc_iter 1500        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:26:39,372   INFO
+2025-11-25 18:26:44,217   INFO  Train:    1/30 (  3%) [1549/15809 ( 10%)]  Loss: 1.791 (2.07)  LR: 3.004e-04  Time cost: 02:34/23:40 [02:37/13:04:38]  Acc_iter 1550        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:26:48,894   INFO  Train:    1/30 (  3%) [1599/15809 ( 10%)]  Loss: 2.018 (2.06)  LR: 3.005e-04  Time cost: 02:39/23:32 [02:42/13:03:03]  Acc_iter 1600        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:26:53,490   INFO  Train:    1/30 (  3%) [1649/15809 ( 10%)]  Loss: 1.115 (2.04)  LR: 3.005e-04  Time cost: 02:43/23:24 [02:46/13:01:11]  Acc_iter 1650        Data time: 0.01(0.01)  Forward time: 0.11(0.09)  Batch time: 0.12(0.10)
+2025-11-25 18:26:53,766   INFO
+2025-11-25 18:26:58,606   INFO  Train:    1/30 (  3%) [1699/15809 ( 11%)]  Loss: 1.768 (2.03)  LR: 3.005e-04  Time cost: 02:48/23:20 [02:51/13:01:50]  Acc_iter 1700        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:27:03,413   INFO  Train:    1/30 (  3%) [1749/15809 ( 11%)]  Loss: 1.445 (2.03)  LR: 3.006e-04  Time cost: 02:53/23:14 [02:56/13:01:03]  Acc_iter 1750        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:27:08,122   INFO  Train:    1/30 (  3%) [1799/15809 ( 11%)]  Loss: 1.540 (2.02)  LR: 3.006e-04  Time cost: 02:58/23:07 [03:01/12:59:52]  Acc_iter 1800        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:27:08,405   INFO
+2025-11-25 18:27:13,132   INFO  Train:    1/30 (  3%) [1849/15809 ( 12%)]  Loss: 1.170 (2.01)  LR: 3.006e-04  Time cost: 03:03/23:03 [03:06/13:00:02]  Acc_iter 1850        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:27:17,979   INFO  Train:    1/30 (  3%) [1899/15809 ( 12%)]  Loss: 2.012 (2.00)  LR: 3.007e-04  Time cost: 03:08/22:57 [03:11/12:59:31]  Acc_iter 1900        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:27:22,557   INFO  Train:    1/30 (  3%) [1949/15809 ( 12%)]  Loss: 1.244 (1.99)  LR: 3.007e-04  Time cost: 03:12/22:49 [03:15/12:57:55]  Acc_iter 1950        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:27:22,849   INFO
+2025-11-25 18:27:27,526   INFO  Train:    1/30 (  3%) [1999/15809 ( 13%)]  Loss: 1.318 (1.98)  LR: 3.007e-04  Time cost: 03:17/22:44 [03:20/12:57:57]  Acc_iter 2000        Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:27:32,339   INFO  Train:    1/30 (  3%) [2049/15809 ( 13%)]  Loss: 1.962 (1.97)  LR: 3.008e-04  Time cost: 03:22/22:39 [03:25/12:57:22]  Acc_iter 2050        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:27:37,085   INFO  Train:    1/30 (  3%) [2099/15809 ( 13%)]  Loss: 1.700 (1.96)  LR: 3.008e-04  Time cost: 03:27/22:32 [03:30/12:56:34]  Acc_iter 2100        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:27:37,376   INFO
+2025-11-25 18:27:42,297   INFO  Train:    1/30 (  3%) [2149/15809 ( 14%)]  Loss: 1.779 (1.95)  LR: 3.009e-04  Time cost: 03:32/22:29 [03:35/12:57:30]  Acc_iter 2150        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:27:47,058   INFO  Train:    1/30 (  3%) [2199/15809 ( 14%)]  Loss: 2.378 (1.95)  LR: 3.009e-04  Time cost: 03:37/22:23 [03:40/12:56:47]  Acc_iter 2200        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:27:51,865   INFO  Train:    1/30 (  3%) [2249/15809 ( 14%)]  Loss: 2.609 (1.94)  LR: 3.009e-04  Time cost: 03:42/22:17 [03:45/12:56:15]  Acc_iter 2250        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:27:52,170   INFO
+2025-11-25 18:27:57,069   INFO  Train:    1/30 (  3%) [2299/15809 ( 15%)]  Loss: 2.249 (1.93)  LR: 3.010e-04  Time cost: 03:47/22:14 [03:50/12:57:05]  Acc_iter 2300        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:28:01,821   INFO  Train:    1/30 (  3%) [2349/15809 ( 15%)]  Loss: 1.874 (1.92)  LR: 3.010e-04  Time cost: 03:51/22:08 [03:55/12:56:23]  Acc_iter 2350        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:28:06,533   INFO  Train:    1/30 (  3%) [2399/15809 ( 15%)]  Loss: 2.529 (1.92)  LR: 3.011e-04  Time cost: 03:56/22:02 [03:59/12:55:34]  Acc_iter 2400        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:28:06,813   INFO
+2025-11-25 18:28:11,529   INFO  Train:    1/30 (  3%) [2449/15809 ( 15%)]  Loss: 1.730 (1.91)  LR: 3.011e-04  Time cost: 04:01/21:57 [04:04/12:55:41]  Acc_iter 2450        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:28:16,332   INFO  Train:    1/30 (  3%) [2499/15809 ( 16%)]  Loss: 1.341 (1.90)  LR: 3.012e-04  Time cost: 04:06/21:52 [04:09/12:55:12]  Acc_iter 2500        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:28:21,142   INFO  Train:    1/30 (  3%) [2549/15809 ( 16%)]  Loss: 1.481 (1.90)  LR: 3.012e-04  Time cost: 04:11/21:46 [04:14/12:54:45]  Acc_iter 2550        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:28:21,440   INFO
+2025-11-25 18:28:26,253   INFO  Train:    1/30 (  3%) [2599/15809 ( 16%)]  Loss: 1.608 (1.89)  LR: 3.013e-04  Time cost: 04:16/21:42 [04:19/12:55:13]  Acc_iter 2600        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:28:30,869   INFO  Train:    1/30 (  3%) [2649/15809 ( 17%)]  Loss: 1.380 (1.89)  LR: 3.013e-04  Time cost: 04:21/21:36 [04:24/12:54:12]  Acc_iter 2650        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:28:35,476   INFO  Train:    1/30 (  3%) [2699/15809 ( 17%)]  Loss: 1.315 (1.88)  LR: 3.013e-04  Time cost: 04:25/21:29 [04:28/12:53:12]  Acc_iter 2700        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:28:35,776   INFO
+2025-11-25 18:28:40,500   INFO  Train:    1/30 (  3%) [2749/15809 ( 17%)]  Loss: 1.688 (1.87)  LR: 3.014e-04  Time cost: 04:30/21:25 [04:33/12:53:25]  Acc_iter 2750        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:28:45,118   INFO  Train:    1/30 (  3%) [2799/15809 ( 18%)]  Loss: 1.850 (1.87)  LR: 3.014e-04  Time cost: 04:35/21:18 [04:38/12:52:29]  Acc_iter 2800        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:28:49,833   INFO  Train:    1/30 (  3%) [2849/15809 ( 18%)]  Loss: 1.324 (1.86)  LR: 3.015e-04  Time cost: 04:39/21:13 [04:43/12:51:51]  Acc_iter 2850        Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:28:50,119   INFO
+2025-11-25 18:28:54,982   INFO  Train:    1/30 (  3%) [2899/15809 ( 18%)]  Loss: 1.800 (1.85)  LR: 3.016e-04  Time cost: 04:45/21:09 [04:48/12:52:25]  Acc_iter 2900        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:28:59,847   INFO  Train:    1/30 (  3%) [2949/15809 ( 19%)]  Loss: 1.402 (1.85)  LR: 3.016e-04  Time cost: 04:49/21:04 [04:53/12:52:12]  Acc_iter 2950        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:29:04,694   INFO  Train:    1/30 (  3%) [2999/15809 ( 19%)]  Loss: 1.625 (1.84)  LR: 3.017e-04  Time cost: 04:54/20:58 [04:57/12:51:56]  Acc_iter 3000        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:29:04,987   INFO
+2025-11-25 18:29:09,818   INFO  Train:    1/30 (  3%) [3049/15809 ( 19%)]  Loss: 1.622 (1.84)  LR: 3.017e-04  Time cost: 04:59/20:54 [05:03/12:52:24]  Acc_iter 3050        Data time: 0.01(0.01)  Forward time: 0.11(0.09)  Batch time: 0.12(0.10)
+2025-11-25 18:29:10,033   INFO  Save latest model to /home/ionesctn/Code/openpcdet_project/OpenPCDet/output/waymo_models/pointpillar_lite/waymo_lite/ckpt/latest_model
+2025-11-25 18:29:14,639   INFO  Train:    1/30 (  3%) [3099/15809 ( 20%)]  Loss: 1.482 (1.83)  LR: 3.018e-04  Time cost: 05:04/20:49 [05:07/12:52:04]  Acc_iter 3100        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:29:19,398   INFO  Train:    1/30 (  3%) [3149/15809 ( 20%)]  Loss: 1.513 (1.83)  LR: 3.018e-04  Time cost: 05:09/20:44 [05:12/12:51:36]  Acc_iter 3150        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:29:19,683   INFO
+2025-11-25 18:29:24,432   INFO  Train:    1/30 (  3%) [3199/15809 ( 20%)]  Loss: 1.797 (1.82)  LR: 3.019e-04  Time cost: 05:14/20:39 [05:17/12:51:49]  Acc_iter 3200        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:29:29,328   INFO  Train:    1/30 (  3%) [3249/15809 ( 21%)]  Loss: 1.246 (1.82)  LR: 3.020e-04  Time cost: 05:19/20:34 [05:22/12:51:41]  Acc_iter 3250        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:29:33,988   INFO  Train:    1/30 (  3%) [3299/15809 ( 21%)]  Loss: 1.227 (1.81)  LR: 3.020e-04  Time cost: 05:24/20:28 [05:27/12:50:59]  Acc_iter 3300        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:29:34,294   INFO
+2025-11-25 18:29:39,102   INFO  Train:    1/30 (  3%) [3349/15809 ( 21%)]  Loss: 1.308 (1.81)  LR: 3.021e-04  Time cost: 05:29/20:24 [05:32/12:51:23]  Acc_iter 3350        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:29:43,885   INFO  Train:    1/30 (  3%) [3399/15809 ( 22%)]  Loss: 1.248 (1.80)  LR: 3.021e-04  Time cost: 05:34/20:19 [05:37/12:51:00]  Acc_iter 3400        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:29:48,586   INFO  Train:    1/30 (  3%) [3449/15809 ( 22%)]  Loss: 1.419 (1.80)  LR: 3.022e-04  Time cost: 05:38/20:13 [05:41/12:50:26]  Acc_iter 3450        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:29:48,878   INFO
+2025-11-25 18:29:53,743   INFO  Train:    1/30 (  3%) [3499/15809 ( 22%)]  Loss: 1.411 (1.79)  LR: 3.023e-04  Time cost: 05:43/20:09 [05:46/12:50:55]  Acc_iter 3500        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:29:58,549   INFO  Train:    1/30 (  3%) [3549/15809 ( 22%)]  Loss: 1.140 (1.79)  LR: 3.023e-04  Time cost: 05:48/20:04 [05:51/12:50:36]  Acc_iter 3550        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:30:03,381   INFO  Train:    1/30 (  3%) [3599/15809 ( 23%)]  Loss: 1.510 (1.78)  LR: 3.024e-04  Time cost: 05:53/19:59 [05:56/12:50:20]  Acc_iter 3600        Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:30:03,669   INFO
+2025-11-25 18:30:08,496   INFO  Train:    1/30 (  3%) [3649/15809 ( 23%)]  Loss: 1.521 (1.78)  LR: 3.025e-04  Time cost: 05:58/19:54 [06:01/12:50:42]  Acc_iter 3650        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:30:13,444   INFO  Train:    1/30 (  3%) [3699/15809 ( 23%)]  Loss: 1.908 (1.78)  LR: 3.025e-04  Time cost: 06:03/19:50 [06:06/12:50:41]  Acc_iter 3700        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:30:18,081   INFO  Train:    1/30 (  3%) [3749/15809 ( 24%)]  Loss: 1.489 (1.77)  LR: 3.026e-04  Time cost: 06:08/19:44 [06:11/12:50:02]  Acc_iter 3750        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:30:18,373   INFO
+2025-11-25 18:30:23,324   INFO  Train:    1/30 (  3%) [3799/15809 ( 24%)]  Loss: 0.9870 (1.77)  LR: 3.027e-04  Time cost: 06:13/19:40 [06:16/12:50:38]  Acc_iter 3800        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:30:28,008   INFO  Train:    1/30 (  3%) [3849/15809 ( 24%)]  Loss: 1.237 (1.76)  LR: 3.027e-04  Time cost: 06:18/19:34 [06:21/12:50:05]  Acc_iter 3850        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:30:32,768   INFO  Train:    1/30 (  3%) [3899/15809 ( 25%)]  Loss: 1.360 (1.76)  LR: 3.028e-04  Time cost: 06:22/19:29 [06:25/12:49:42]  Acc_iter 3900        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:30:33,062   INFO
+2025-11-25 18:30:37,956   INFO  Train:    1/30 (  3%) [3949/15809 ( 25%)]  Loss: 1.452 (1.76)  LR: 3.029e-04  Time cost: 06:28/19:25 [06:31/12:50:10]  Acc_iter 3950        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:30:42,803   INFO  Train:    1/30 (  3%) [3999/15809 ( 25%)]  Loss: 1.432 (1.75)  LR: 3.030e-04  Time cost: 06:32/19:20 [06:36/12:49:58]  Acc_iter 4000        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:30:47,595   INFO  Train:    1/30 (  3%) [4049/15809 ( 26%)]  Loss: 1.136 (1.75)  LR: 3.030e-04  Time cost: 06:37/19:14 [06:40/12:49:39]  Acc_iter 4050        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:30:47,885   INFO
+2025-11-25 18:30:52,697   INFO  Train:    1/30 (  3%) [4099/15809 ( 26%)]  Loss: 1.153 (1.74)  LR: 3.031e-04  Time cost: 06:42/19:10 [06:45/12:49:56]  Acc_iter 4100        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:30:57,475   INFO  Train:    1/30 (  3%) [4149/15809 ( 26%)]  Loss: 1.057 (1.74)  LR: 3.032e-04  Time cost: 06:47/19:05 [06:50/12:49:36]  Acc_iter 4150        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:31:02,318   INFO  Train:    1/30 (  3%) [4199/15809 ( 27%)]  Loss: 1.620 (1.74)  LR: 3.033e-04  Time cost: 06:52/19:00 [06:55/12:49:23]  Acc_iter 4200        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:31:02,611   INFO
+2025-11-25 18:31:07,407   INFO  Train:    1/30 (  3%) [4249/15809 ( 27%)]  Loss: 1.015 (1.73)  LR: 3.033e-04  Time cost: 06:57/18:55 [07:00/12:49:38]  Acc_iter 4250        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:31:12,172   INFO  Train:    1/30 (  3%) [4299/15809 ( 27%)]  Loss: 1.620 (1.73)  LR: 3.034e-04  Time cost: 07:02/18:50 [07:05/12:49:17]  Acc_iter 4300        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:31:16,970   INFO  Train:    1/30 (  3%) [4349/15809 ( 28%)]  Loss: 1.388 (1.72)  LR: 3.035e-04  Time cost: 07:07/18:45 [07:10/12:49:00]  Acc_iter 4350        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:31:17,259   INFO
+2025-11-25 18:31:22,029   INFO  Train:    1/30 (  3%) [4399/15809 ( 28%)]  Loss: 1.416 (1.72)  LR: 3.036e-04  Time cost: 07:12/18:40 [07:15/12:49:11]  Acc_iter 4400        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:31:26,781   INFO  Train:    1/30 (  3%) [4449/15809 ( 28%)]  Loss: 1.471 (1.72)  LR: 3.037e-04  Time cost: 07:16/18:35 [07:19/12:48:49]  Acc_iter 4450        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:31:31,487   INFO  Train:    1/30 (  3%) [4499/15809 ( 28%)]  Loss: 1.641 (1.71)  LR: 3.037e-04  Time cost: 07:21/18:29 [07:24/12:48:23]  Acc_iter 4500        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:31:31,771   INFO
+2025-11-25 18:31:36,343   INFO  Train:    1/30 (  3%) [4549/15809 ( 29%)]  Loss: 1.217 (1.71)  LR: 3.038e-04  Time cost: 07:26/18:24 [07:29/12:48:13]  Acc_iter 4550        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:31:41,232   INFO  Train:    1/30 (  3%) [4599/15809 ( 29%)]  Loss: 1.340 (1.71)  LR: 3.039e-04  Time cost: 07:31/18:19 [07:34/12:48:06]  Acc_iter 4600        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:31:46,025   INFO  Train:    1/30 (  3%) [4649/15809 ( 29%)]  Loss: 1.018 (1.70)  LR: 3.040e-04  Time cost: 07:36/18:14 [07:39/12:47:50]  Acc_iter 4650        Data time: 0.00(0.01)  Forward time: 0.11(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:31:46,315   INFO
+2025-11-25 18:31:51,099   INFO  Train:    1/30 (  3%) [4699/15809 ( 30%)]  Loss: 1.488 (1.70)  LR: 3.041e-04  Time cost: 07:41/18:10 [07:44/12:48:02]  Acc_iter 4700        Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:31:55,826   INFO  Train:    1/30 (  3%) [4749/15809 ( 30%)]  Loss: 1.356 (1.70)  LR: 3.042e-04  Time cost: 07:45/18:04 [07:49/12:47:39]  Acc_iter 4750        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:32:00,490   INFO  Train:    1/30 (  3%) [4799/15809 ( 30%)]  Loss: 1.608 (1.69)  LR: 3.043e-04  Time cost: 07:50/17:59 [07:53/12:47:11]  Acc_iter 4800        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:00,771   INFO
+2025-11-25 18:32:05,460   INFO  Train:    1/30 (  3%) [4849/15809 ( 31%)]  Loss: 1.726 (1.69)  LR: 3.044e-04  Time cost: 07:55/17:54 [07:58/12:47:12]  Acc_iter 4850        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:10,095   INFO  Train:    1/30 (  3%) [4899/15809 ( 31%)]  Loss: 1.399 (1.69)  LR: 3.044e-04  Time cost: 08:00/17:49 [08:03/12:46:42]  Acc_iter 4900        Data time: 0.00(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:32:14,798   INFO  Train:    1/30 (  3%) [4949/15809 ( 31%)]  Loss: 1.197 (1.68)  LR: 3.045e-04  Time cost: 08:04/17:43 [08:08/12:46:18]  Acc_iter 4950        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:15,094   INFO
+2025-11-25 18:32:19,953   INFO  Train:    1/30 (  3%) [4999/15809 ( 32%)]  Loss: 1.692 (1.68)  LR: 3.046e-04  Time cost: 08:10/17:39 [08:13/12:46:37]  Acc_iter 5000        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:32:24,651   INFO  Train:    1/30 (  3%) [5049/15809 ( 32%)]  Loss: 1.121 (1.68)  LR: 3.047e-04  Time cost: 08:14/17:34 [08:17/12:46:14]  Acc_iter 5050        Data time: 0.01(0.01)  Forward time: 0.11(0.09)  Batch time: 0.12(0.10)
+2025-11-25 18:32:29,489   INFO  Train:    1/30 (  3%) [5099/15809 ( 32%)]  Loss: 1.554 (1.68)  LR: 3.048e-04  Time cost: 08:19/17:29 [08:22/12:46:03]  Acc_iter 5100        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:29,778   INFO
+2025-11-25 18:32:34,561   INFO  Train:    1/30 (  3%) [5149/15809 ( 33%)]  Loss: 1.253 (1.67)  LR: 3.049e-04  Time cost: 08:24/17:24 [08:27/12:46:14]  Acc_iter 5150        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:39,418   INFO  Train:    1/30 (  3%) [5199/15809 ( 33%)]  Loss: 1.488 (1.67)  LR: 3.050e-04  Time cost: 08:29/17:19 [08:32/12:46:05]  Acc_iter 5200        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:32:44,245   INFO  Train:    1/30 (  3%) [5249/15809 ( 33%)]  Loss: 1.425 (1.67)  LR: 3.051e-04  Time cost: 08:34/17:14 [08:37/12:45:54]  Acc_iter 5250        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:32:44,537   INFO
+2025-11-25 18:32:49,384   INFO  Train:    1/30 (  3%) [5299/15809 ( 34%)]  Loss: 1.178 (1.67)  LR: 3.052e-04  Time cost: 08:39/17:10 [08:42/12:46:10]  Acc_iter 5300        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:54,213   INFO  Train:    1/30 (  3%) [5349/15809 ( 34%)]  Loss: 1.763 (1.66)  LR: 3.053e-04  Time cost: 08:44/17:05 [08:47/12:45:59]  Acc_iter 5350        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:59,100   INFO  Train:    1/30 (  3%) [5399/15809 ( 34%)]  Loss: 1.259 (1.66)  LR: 3.054e-04  Time cost: 08:49/17:00 [08:52/12:45:53]  Acc_iter 5400        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:32:59,392   INFO
+2025-11-25 18:33:04,204   INFO  Train:    1/30 (  3%) [5449/15809 ( 34%)]  Loss: 1.325 (1.66)  LR: 3.055e-04  Time cost: 08:54/16:55 [08:57/12:46:06]  Acc_iter 5450        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:33:08,889   INFO  Train:    1/30 (  3%) [5499/15809 ( 35%)]  Loss: 1.511 (1.66)  LR: 3.056e-04  Time cost: 08:59/16:50 [09:02/12:45:42]  Acc_iter 5500        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:33:13,644   INFO  Train:    1/30 (  3%) [5549/15809 ( 35%)]  Loss: 1.645 (1.65)  LR: 3.057e-04  Time cost: 09:03/16:45 [09:06/12:45:25]  Acc_iter 5550        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:33:13,938   INFO
+2025-11-25 18:33:18,690   INFO  Train:    1/30 (  3%) [5599/15809 ( 35%)]  Loss: 1.378 (1.65)  LR: 3.058e-04  Time cost: 09:08/16:40 [09:11/12:45:32]  Acc_iter 5600        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:33:23,315   INFO  Train:    1/30 (  3%) [5649/15809 ( 36%)]  Loss: 1.241 (1.65)  LR: 3.059e-04  Time cost: 09:13/16:35 [09:16/12:45:05]  Acc_iter 5650        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:33:27,875   INFO  Train:    1/30 (  3%) [5699/15809 ( 36%)]  Loss: 1.471 (1.64)  LR: 3.060e-04  Time cost: 09:18/16:29 [09:21/12:44:32]  Acc_iter 5700        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:33:28,162   INFO
+2025-11-25 18:33:32,816   INFO  Train:    1/30 (  3%) [5749/15809 ( 36%)]  Loss: 0.9796 (1.64)  LR: 3.061e-04  Time cost: 09:22/16:24 [09:26/12:44:31]  Acc_iter 5750        Data time: 0.00(0.01)  Forward time: 0.08(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:33:37,609   INFO  Train:    1/30 (  3%) [5799/15809 ( 37%)]  Loss: 1.087 (1.64)  LR: 3.062e-04  Time cost: 09:27/16:19 [09:30/12:44:18]  Acc_iter 5800        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:33:42,555   INFO  Train:    1/30 (  3%) [5849/15809 ( 37%)]  Loss: 1.248 (1.64)  LR: 3.063e-04  Time cost: 09:32/16:15 [09:35/12:44:17]  Acc_iter 5850        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:33:42,849   INFO
+2025-11-25 18:33:47,780   INFO  Train:    1/30 (  3%) [5899/15809 ( 37%)]  Loss: 1.078 (1.64)  LR: 3.064e-04  Time cost: 09:37/16:10 [09:40/12:44:38]  Acc_iter 5900        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:33:52,525   INFO  Train:    1/30 (  3%) [5949/15809 ( 38%)]  Loss: 1.200 (1.63)  LR: 3.065e-04  Time cost: 09:42/16:05 [09:45/12:44:21]  Acc_iter 5950        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:33:57,316   INFO  Train:    1/30 (  3%) [5999/15809 ( 38%)]  Loss: 1.232 (1.63)  LR: 3.067e-04  Time cost: 09:47/16:00 [09:50/12:44:08]  Acc_iter 6000        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:33:57,609   INFO
+2025-11-25 18:34:02,648   INFO  Train:    1/30 (  3%) [6049/15809 ( 38%)]  Loss: 1.275 (1.63)  LR: 3.068e-04  Time cost: 09:52/15:56 [09:55/12:44:37]  Acc_iter 6050        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:34:07,476   INFO  Train:    1/30 (  3%) [6099/15809 ( 39%)]  Loss: 1.423 (1.62)  LR: 3.069e-04  Time cost: 09:57/15:51 [10:00/12:44:27]  Acc_iter 6100        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:34:09,989   INFO  Save latest model to /home/ionesctn/Code/openpcdet_project/OpenPCDet/output/waymo_models/pointpillar_lite/waymo_lite/ckpt/latest_model
+2025-11-25 18:34:12,269   INFO  Train:    1/30 (  3%) [6149/15809 ( 39%)]  Loss: 1.794 (1.62)  LR: 3.070e-04  Time cost: 10:02/15:46 [10:05/12:44:14]  Acc_iter 6150        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:34:12,563   INFO
+2025-11-25 18:34:17,420   INFO  Train:    1/30 (  3%) [6199/15809 ( 39%)]  Loss: 1.816 (1.62)  LR: 3.071e-04  Time cost: 10:07/15:41 [10:10/12:44:28]  Acc_iter 6200        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:34:22,104   INFO  Train:    1/30 (  3%) [6249/15809 ( 40%)]  Loss: 1.761 (1.62)  LR: 3.072e-04  Time cost: 10:12/15:36 [10:15/12:44:07]  Acc_iter 6250        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:34:26,890   INFO  Train:    1/30 (  3%) [6299/15809 ( 40%)]  Loss: 1.764 (1.61)  LR: 3.073e-04  Time cost: 10:17/15:31 [10:20/12:43:54]  Acc_iter 6300        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:34:27,171   INFO
+2025-11-25 18:34:31,925   INFO  Train:    1/30 (  3%) [6349/15809 ( 40%)]  Loss: 1.545 (1.61)  LR: 3.075e-04  Time cost: 10:22/15:26 [10:25/12:43:59]  Acc_iter 6350        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:34:36,746   INFO  Train:    1/30 (  3%) [6399/15809 ( 40%)]  Loss: 1.540 (1.61)  LR: 3.076e-04  Time cost: 10:26/15:21 [10:29/12:43:48]  Acc_iter 6400        Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:34:41,520   INFO  Train:    1/30 (  3%) [6449/15809 ( 41%)]  Loss: 1.440 (1.61)  LR: 3.077e-04  Time cost: 10:31/15:16 [10:34/12:43:35]  Acc_iter 6450        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:34:41,808   INFO
+2025-11-25 18:34:46,771   INFO  Train:    1/30 (  3%) [6499/15809 ( 41%)]  Loss: 1.717 (1.61)  LR: 3.078e-04  Time cost: 10:36/15:12 [10:39/12:43:55]  Acc_iter 6500        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:34:51,468   INFO  Train:    1/30 (  3%) [6549/15809 ( 41%)]  Loss: 1.446 (1.60)  LR: 3.079e-04  Time cost: 10:41/15:07 [10:44/12:43:36]  Acc_iter 6550        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:34:56,208   INFO  Train:    1/30 (  3%) [6599/15809 ( 42%)]  Loss: 0.9569 (1.60)  LR: 3.081e-04  Time cost: 10:46/15:01 [10:49/12:43:20]  Acc_iter 6600        Data time: 0.01(0.01)  Forward time: 0.07(0.09)  Batch time: 0.08(0.10)
+2025-11-25 18:34:56,509   INFO
+2025-11-25 18:35:01,380   INFO  Train:    1/30 (  3%) [6649/15809 ( 42%)]  Loss: 1.125 (1.60)  LR: 3.082e-04  Time cost: 10:51/14:57 [10:54/12:43:34]  Acc_iter 6650        Data time: 0.00(0.01)  Forward time: 0.11(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:35:06,230   INFO  Train:    1/30 (  3%) [6699/15809 ( 42%)]  Loss: 1.128 (1.60)  LR: 3.083e-04  Time cost: 10:56/14:52 [10:59/12:43:26]  Acc_iter 6700        Data time: 0.00(0.01)  Forward time: 0.07(0.09)  Batch time: 0.07(0.10)
+2025-11-25 18:35:11,070   INFO  Train:    1/30 (  3%) [6749/15809 ( 43%)]  Loss: 1.230 (1.60)  LR: 3.084e-04  Time cost: 11:01/14:47 [11:04/12:43:17]  Acc_iter 6750        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.11(0.10)
+2025-11-25 18:35:11,370   INFO
+2025-11-25 18:35:16,180   INFO  Train:    1/30 (  3%) [6799/15809 ( 43%)]  Loss: 1.334 (1.59)  LR: 3.085e-04  Time cost: 11:06/14:42 [11:09/12:43:27]  Acc_iter 6800        Data time: 0.00(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:35:20,898   INFO  Train:    1/30 (  3%) [6849/15809 ( 43%)]  Loss: 1.345 (1.59)  LR: 3.087e-04  Time cost: 11:11/14:37 [11:14/12:43:09]  Acc_iter 6850        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:35:25,555   INFO  Train:    1/30 (  3%) [6899/15809 ( 44%)]  Loss: 1.393 (1.59)  LR: 3.088e-04  Time cost: 11:15/14:32 [11:18/12:42:48]  Acc_iter 6900        Data time: 0.01(0.01)  Forward time: 0.11(0.09)  Batch time: 0.12(0.10)
+2025-11-25 18:35:25,852   INFO
+2025-11-25 18:35:30,670   INFO  Train:    1/30 (  3%) [6949/15809 ( 44%)]  Loss: 1.218 (1.59)  LR: 3.089e-04  Time cost: 11:20/14:27 [11:23/12:42:58]  Acc_iter 6950        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:35:35,365   INFO  Train:    1/30 (  3%) [6999/15809 ( 44%)]  Loss: 1.243 (1.59)  LR: 3.091e-04  Time cost: 11:25/14:22 [11:28/12:42:40]  Acc_iter 7000        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:35:40,070   INFO  Train:    1/30 (  3%) [7049/15809 ( 45%)]  Loss: 1.263 (1.59)  LR: 3.092e-04  Time cost: 11:30/14:17 [11:33/12:42:22]  Acc_iter 7050        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:35:40,357   INFO
+2025-11-25 18:35:44,992   INFO  Train:    1/30 (  3%) [7099/15809 ( 45%)]  Loss: 1.148 (1.58)  LR: 3.093e-04  Time cost: 11:35/14:12 [11:38/12:42:19]  Acc_iter 7100        Data time: 0.01(0.01)  Forward time: 0.10(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:35:49,798   INFO  Train:    1/30 (  3%) [7149/15809 ( 45%)]  Loss: 1.398 (1.58)  LR: 3.094e-04  Time cost: 11:39/14:07 [11:43/12:42:08]  Acc_iter 7150        Data time: 0.01(0.01)  Forward time: 0.09(0.09)  Batch time: 0.10(0.10)
+2025-11-25 18:35:54,421   INFO  Train:    1/30 (  3%) [7199/15809 ( 46%)]  Loss: 1.346 (1.58)  LR: 3.096e-04  Time cost: 11:44/14:02 [11:47/12:41:46]  Acc_iter 7200        Data time: 0.01(0.01)  Forward time: 0.08(0.09)  Batch time: 0.09(0.10)
+2025-11-25 18:35:54,700   INFO
+2025-11-25 18:35:59,564   INFO  Train:    1/30 (  3%) [7249/15809 ( 46%)]  Loss: 1.484 (1.58)  LR: 3.097e-04  Time cost: 11:49/13:57 [11:52/12:41:57]  Acc_iter 7250        Data time: 0.00(0.01)  Forward time: 0.09(0.09)  Batch time: 0.09(0.10)

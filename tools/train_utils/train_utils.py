@@ -136,15 +136,19 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
             # Log to wandb
             if wandb_logger is not None:
                 wandb_metrics = {
-                    'train/loss': loss.item(),
-                    'train/learning_rate': cur_lr,
-                    'train/data_time': avg_data_time,
-                    'train/forward_time': avg_forward_time,
-                    'train/batch_time': avg_batch_time,
+                    'iter/loss': loss.item(),
+                    'iter/learning_rate': cur_lr,
+                    'iter/data_time': avg_data_time,
+                    'iter/forward_time': avg_forward_time,
+                    'iter/batch_time': avg_batch_time,
                 }
+                # Organize loss components
                 for key, val in tb_dict.items():
-                    wandb_metrics[f'train/{key}'] = val
-                wandb_logger.log_metrics(wandb_metrics, step=accumulated_iter)
+                    if 'loss' in key.lower():
+                        wandb_metrics[f'iter/losses/{key}'] = val
+                    else:
+                        wandb_metrics[f'iter/{key}'] = val
+                wandb_logger.log_metrics(wandb_metrics, step=accumulated_iter, epoch=cur_epoch)
             
             # save intermediate ckpt every {ckpt_save_time_interval} seconds         
             time_past_this_epoch = pbar.format_dict['elapsed']
@@ -215,7 +219,12 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
             
             # Log epoch-level metrics to wandb
             if wandb_logger is not None and rank == 0:
-                wandb_logger.log_epoch_metrics(cur_epoch + 1, epoch_loss)
+                # Get current learning rate
+                try:
+                    cur_lr = float(optimizer.lr)
+                except:
+                    cur_lr = optimizer.param_groups[0]['lr']
+                wandb_logger.log_epoch_metrics(cur_epoch + 1, epoch_loss, lr=cur_lr)
             
             # Check early stopping
             if early_stopping is not None and rank == 0:
