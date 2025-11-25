@@ -169,7 +169,7 @@ squeue -u $USER
 
 ### View Test Results
 ```bash
-# Check output logs
+# Check output logs live
 tail -f logs/test_pointpillar_full_kitti_<JOB_ID>.out
 
 # View results directory
