@@ -24,16 +24,20 @@ cd ~/Code/openpcdet_project/OpenPCDet/tools
 export WAYMO_DATA_PATH=/ibex/project/c2337/datasets/waymo
 
 # Create output directory
-mkdir -p ../dcgm/pp_ultra_waymo
+mkdir -p ../dcgm/pp_ultralight_waymo
 
-# Train PointPillar Ultralight on Waymo
+# Train PointPillar Ultralight on Waymo with wandb and early stopping
 echo "Starting training of PointPillar Ultralight on Waymo..."
 python train.py \
     --cfg_file cfgs/waymo_models/pointpillar_ultralight.yaml \
-    --batch_size 6 \
+    --batch_size 2 \
     --epochs 30 \
     --workers 16 \
     --extra_tag waymo_ultralight \
-    2>&1 | tee ../dcgm/pp_ultra_waymo/train_ultralight.log
+    --use_wandb \
+    --wandb_project pointpillars-waymo \
+    --early_stopping \
+    --early_stopping_patience 7 \
+    2>&1 | tee ../dcgm/pp_ultralight_waymo/train_ultralight.log
 
 echo "Training completed! Log saved to dcgm/pp_ultra_waymo/train_ultralight.log"

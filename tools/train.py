@@ -16,6 +16,7 @@ from pcdet.models import build_network, model_fn_decorator
 from pcdet.utils import common_utils
 from train_utils.optimization import build_optimizer, build_scheduler
 from train_utils.train_utils import train_model
+from train_utils.wandb_logger import WandbLogger, EarlyStopping
 
 
 def parse_config():
@@ -50,6 +51,14 @@ def parse_config():
     parser.add_argument('--wo_gpu_stat', action='store_true', help='')
     parser.add_argument('--use_amp', action='store_true', help='use mix precision training')
     
+    # Wandb arguments
+    parser.add_argument('--use_wandb', action='store_true', help='use Weights & Biases logging')
+    parser.add_argument('--wandb_project', type=str, default='pointpillars-waymo', help='wandb project name')
+    
+    # Early stopping arguments
+    parser.add_argument('--early_stopping', action='store_true', help='use early stopping')
+    parser.add_argument('--early_stopping_patience', type=int, default=7, help='patience for early stopping')
+    parser.add_argument('--early_stopping_min_delta', type=float, default=0.001, help='minimum change to qualify as improvement')
 
     args = parser.parse_args()
 
@@ -115,6 +124,20 @@ def main():
         os.system('cp %s %s' % (args.cfg_file, output_dir))
 
     tb_log = SummaryWriter(log_dir=str(output_dir / 'tensorboard')) if cfg.LOCAL_RANK == 0 else None
+    
+    # Initialize wandb logger
+    wandb_logger = WandbLogger(cfg, args, logger, enabled=(args.use_wandb and cfg.LOCAL_RANK == 0))
+    
+    # Initialize early stopping
+    early_stopping = None
+    if args.early_stopping and cfg.LOCAL_RANK == 0:
+        early_stopping = EarlyStopping(
+            patience=args.early_stopping_patience,
+            min_delta=args.early_stopping_min_delta,
+            mode='min',
+            logger=logger
+        )
+        logger.info(f"Early stopping enabled with patience={args.early_stopping_patience}")
 
     logger.info("----------- Create dataloader & network & optimizer -----------")
     train_set, train_loader, train_sampler = build_dataloader(
@@ -203,11 +226,17 @@ def main():
         use_logger_to_record=not args.use_tqdm_to_record, 
         show_gpu_stat=not args.wo_gpu_stat,
         use_amp=args.use_amp,
-        cfg=cfg
+        cfg=cfg,
+        wandb_logger=wandb_logger,
+        early_stopping=early_stopping
     )
 
     if hasattr(train_set, 'use_shared_memory') and train_set.use_shared_memory:
         train_set.clean_shared_memory()
+    
+    # Finish wandb logging
+    if wandb_logger is not None:
+        wandb_logger.finish()
 
     logger.info('**********************End training %s/%s(%s)**********************\n\n\n'
                 % (cfg.EXP_GROUP_PATH, cfg.TAG, args.extra_tag))

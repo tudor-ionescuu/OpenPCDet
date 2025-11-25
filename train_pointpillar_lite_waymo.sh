@@ -26,14 +26,18 @@ export WAYMO_DATA_PATH=/ibex/project/c2337/datasets/waymo
 # Create output directory
 mkdir -p ../dcgm/pp_lite_waymo
 
-# Train PointPillar Lite on Waymo
+# Train PointPillar Lite on Waymo with wandb and early stopping
 echo "Starting training of PointPillar Lite on Waymo..."
 python train.py \
     --cfg_file cfgs/waymo_models/pointpillar_lite.yaml \
-    --batch_size 4 \
+    --batch_size 2 \
     --epochs 30 \
     --workers 16 \
     --extra_tag waymo_lite \
+    --use_wandb \
+    --wandb_project pointpillars-waymo \
+    --early_stopping \
+    --early_stopping_patience 7 \
     2>&1 | tee ../dcgm/pp_lite_waymo/train_lite.log
 
 echo "Training completed! Log saved to dcgm/pp_lite_waymo/train_lite.log"

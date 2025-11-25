@@ -11,7 +11,8 @@ from pcdet.utils import common_utils, commu_utils
 def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, accumulated_iter, optim_cfg,
                     rank, tbar, total_it_each_epoch, dataloader_iter, tb_log=None, leave_pbar=False, 
                     use_logger_to_record=False, logger=None, logger_iter_interval=50, cur_epoch=None, 
-                    total_epochs=None, ckpt_save_dir=None, ckpt_save_time_interval=300, show_gpu_stat=False, use_amp=False):
+                    total_epochs=None, ckpt_save_dir=None, ckpt_save_time_interval=300, show_gpu_stat=False, use_amp=False,
+                    wandb_logger=None):
     if total_it_each_epoch == len(train_loader):
         dataloader_iter = iter(train_loader)
 
@@ -132,6 +133,19 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
                 for key, val in tb_dict.items():
                     tb_log.add_scalar('train/' + key, val, accumulated_iter)
             
+            # Log to wandb
+            if wandb_logger is not None:
+                wandb_metrics = {
+                    'train/loss': loss.item(),
+                    'train/learning_rate': cur_lr,
+                    'train/data_time': avg_data_time,
+                    'train/forward_time': avg_forward_time,
+                    'train/batch_time': avg_batch_time,
+                }
+                for key, val in tb_dict.items():
+                    wandb_metrics[f'train/{key}'] = val
+                wandb_logger.log_metrics(wandb_metrics, step=accumulated_iter)
+            
             # save intermediate ckpt every {ckpt_save_time_interval} seconds         
             time_past_this_epoch = pbar.format_dict['elapsed']
             if time_past_this_epoch // ckpt_save_time_interval >= ckpt_save_cnt:
@@ -144,14 +158,18 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
                 
     if rank == 0:
         pbar.close()
-    return accumulated_iter
+    
+    # Return accumulated_iter and average loss for early stopping
+    avg_loss = losses_m.avg if rank == 0 else 0
+    return accumulated_iter, avg_loss
 
 
 def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_cfg,
                 start_epoch, total_epochs, start_iter, rank, tb_log, ckpt_save_dir, train_sampler=None,
                 lr_warmup_scheduler=None, ckpt_save_interval=1, max_ckpt_save_num=50,
                 merge_all_iters_to_one_epoch=False, use_amp=False,
-                use_logger_to_record=False, logger=None, logger_iter_interval=None, ckpt_save_time_interval=None, show_gpu_stat=False, cfg=None):
+                use_logger_to_record=False, logger=None, logger_iter_interval=None, ckpt_save_time_interval=None, show_gpu_stat=False, cfg=None,
+                wandb_logger=None, early_stopping=None):
     accumulated_iter = start_iter
 
     # use for disable data augmentation hook
@@ -177,7 +195,7 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
                 cur_scheduler = lr_scheduler
             
             augment_disable_flag = disable_augmentation_hook(hook_config, dataloader_iter, total_epochs, cur_epoch, cfg, augment_disable_flag, logger)
-            accumulated_iter = train_one_epoch(
+            accumulated_iter, epoch_loss = train_one_epoch(
                 model, optimizer, train_loader, model_func,
                 lr_scheduler=cur_scheduler,
                 accumulated_iter=accumulated_iter, optim_cfg=optim_cfg,
@@ -191,8 +209,26 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
                 logger=logger, logger_iter_interval=logger_iter_interval,
                 ckpt_save_dir=ckpt_save_dir, ckpt_save_time_interval=ckpt_save_time_interval, 
                 show_gpu_stat=show_gpu_stat,
-                use_amp=use_amp
+                use_amp=use_amp,
+                wandb_logger=wandb_logger
             )
+            
+            # Log epoch-level metrics to wandb
+            if wandb_logger is not None and rank == 0:
+                wandb_logger.log_epoch_metrics(cur_epoch + 1, epoch_loss)
+            
+            # Check early stopping
+            if early_stopping is not None and rank == 0:
+                if early_stopping(epoch_loss, cur_epoch + 1):
+                    logger.info(f"Early stopping triggered at epoch {cur_epoch + 1}")
+                    # Save final model before stopping
+                    ckpt_name = ckpt_save_dir / f'checkpoint_epoch_{cur_epoch + 1}_early_stop'
+                    save_checkpoint(
+                        checkpoint_state(model, optimizer, cur_epoch + 1, accumulated_iter), 
+                        filename=ckpt_name,
+                    )
+                    logger.info(f'Saved early stopping model to {ckpt_name}')
+                    break
 
             # save trained model
             trained_epoch = cur_epoch + 1
