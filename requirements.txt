@@ -12,9 +12,6 @@ numba==0.60.0
 torch==2.8.0
 torchvision==0.23.0
 
-# CUDA compiler (required for building C++/CUDA extensions)
-nvidia-cuda-nvcc-cu12==12.8.93
-
 # spconv for sparse 3D convolutions (CUDA 12.1 compatible)
 spconv-cu121==2.3.8
 

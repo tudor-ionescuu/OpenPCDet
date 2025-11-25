@@ -83,6 +83,8 @@ squeue -u $USER
 tail logs/build_openpcdet_<JOB_ID>.out
 ```
 
+**Note**: The build script automatically loads CUDA 12.1 module on the GPU node and compiles 7 CUDA extensions needed for 3D object detection.
+
 ### 5. Verify Installation
 Once the build job completes successfully, verify the installation:
 ```bash
