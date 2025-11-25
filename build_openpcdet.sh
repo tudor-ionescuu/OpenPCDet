@@ -10,13 +10,15 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=a100
 
-# Set CUDA environment variables
-export CUDA_HOME=/usr/local/cuda-11.7
+# Activate virtual environment
+source ../openpcdet-env/bin/activate
+
+# Set CUDA paths from PyTorch installation
+export CUDA_HOME=$(python -c "import torch; print(torch.utils.cpp_extension.CUDA_HOME)")
 export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 
-# Activate virtual environment
-source ../openpcdet-env/bin/activate
+echo "Using CUDA from: $CUDA_HOME"
 
 # Build and install OpenPCDet
 echo "Building OpenPCDet with CUDA support..."
