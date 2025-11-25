@@ -48,7 +48,7 @@ openpcdet_project/
 ```bash
 mkdir -p openpcdet_project
 cd openpcdet_project
-git clone -b feature/adaptive-routing https://github.com/tudor-ionescu/OpenPCDet.git
+git clone -b feature/adaptive-routing https://github.com/tudor-ionescuu/OpenPCDet.git
 cd OpenPCDet
 ```
 
