@@ -22,7 +22,7 @@ pyyaml==6.0.3
 scikit-image==0.20.0
 tqdm==4.67.1
 SharedArray==3.2.4
-opencv-python==4.12.0.88
+opencv-python==4.5.5.64
 pyquaternion==0.9.9
 pillow==9.2.0
 setuptools==67.6.0
