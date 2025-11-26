@@ -54,6 +54,7 @@ def parse_config():
     # Wandb arguments
     parser.add_argument('--use_wandb', action='store_true', help='use Weights & Biases logging')
     parser.add_argument('--wandb_project', type=str, default='pointpillars-waymo', help='wandb project name')
+    parser.add_argument('--wandb_resume_id', type=str, default=None, help='wandb run id to resume')
     
     # Early stopping arguments
     parser.add_argument('--early_stopping', action='store_true', help='use early stopping')

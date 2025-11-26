@@ -25,10 +25,20 @@ class WandbLogger:
             return
             
         try:
+            # Check if resuming an existing run
+            resume_mode = None
+            run_id = None
+            if hasattr(args, 'wandb_resume_id') and args.wandb_resume_id:
+                resume_mode = "allow"  # Allow creating new run or overwriting
+                run_id = args.wandb_resume_id
+                self.logger.info(f"Resuming/Overwriting wandb run: {run_id}")
+            
             # Initialize wandb
             wandb.init(
                 project=args.wandb_project if hasattr(args, 'wandb_project') else "pointpillars-waymo",
                 name=f"{cfg.TAG}_{args.extra_tag}",
+                id=run_id,
+                resume=resume_mode,
                 config={
                     "model": cfg.TAG,
                     "dataset": cfg.DATA_CONFIG._BASE_CONFIG_,
