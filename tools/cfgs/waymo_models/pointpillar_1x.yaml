@@ -31,7 +31,7 @@ MODEL:
         WITH_DISTANCE: False
         USE_ABSLOTE_XYZ: True
         USE_NORM: True
-        NUM_FILTERS: [ 64, 64 ]
+        NUM_FILTERS: [ 64 ]
 
     MAP_TO_BEV:
         NAME: PointPillarScatter
