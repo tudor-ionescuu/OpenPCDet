@@ -18,6 +18,8 @@ from .bevfusion import BevFusion
 from .voxelnet import VoxelNet
 from .IASSD import IASSD
 from .voxel_fpn import VoxelFPN
+from .CT3D import CT3D
+from .CT3D_3CAT import CT3D_3CAT
 
 __all__ = {
     'Detector3DTemplate': Detector3DTemplate,
@@ -41,6 +43,8 @@ __all__ = {
     'VoxelNet': VoxelNet,
     'IASSD': IASSD,
     'VoxelFPN': VoxelFPN,
+    'CT3D': CT3D,
+    'CT3D_3CAT': CT3D_3CAT,
 }
 
 
