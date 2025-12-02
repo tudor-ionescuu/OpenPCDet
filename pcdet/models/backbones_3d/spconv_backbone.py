@@ -75,53 +75,75 @@ class VoxelBackBone8x(nn.Module):
 
         self.sparse_shape = grid_size[::-1] + [1, 0, 0]
 
+        # Support configurable NUM_FILTERS for compatibility with different model versions
+        if hasattr(model_cfg, 'NUM_FILTERS'):
+            num_filters = model_cfg.NUM_FILTERS
+            assert len(num_filters) == 4, 'NUM_FILTERS must have 4 values'
+        else:
+            num_filters = [16, 32, 64, 64]  # Default values
+
+        # Support configurable OUT_FEATURES for compatibility with CasA and other models
+        out_features = model_cfg.get('OUT_FEATURES', 128)
+
         self.conv_input = spconv.SparseSequential(
-            spconv.SubMConv3d(input_channels, 16, 3, padding=1, bias=False, indice_key='subm1'),
-            norm_fn(16),
+            spconv.SubMConv3d(input_channels, num_filters[0], 3, padding=1, bias=False, indice_key='subm1'),
+            norm_fn(num_filters[0]),
             nn.ReLU(),
         )
         block = post_act_block
 
         self.conv1 = spconv.SparseSequential(
-            block(16, 16, 3, norm_fn=norm_fn, padding=1, indice_key='subm1'),
+            block(num_filters[0], num_filters[0], 3, norm_fn=norm_fn, padding=1, indice_key='subm1'),
         )
 
         self.conv2 = spconv.SparseSequential(
             # [1600, 1408, 41] <- [800, 704, 21]
-            block(16, 32, 3, norm_fn=norm_fn, stride=2, padding=1, indice_key='spconv2', conv_type='spconv'),
-            block(32, 32, 3, norm_fn=norm_fn, padding=1, indice_key='subm2'),
-            block(32, 32, 3, norm_fn=norm_fn, padding=1, indice_key='subm2'),
+            block(num_filters[0], num_filters[1], 3, norm_fn=norm_fn, stride=2, padding=1, indice_key='spconv2', conv_type='spconv'),
+            block(num_filters[1], num_filters[1], 3, norm_fn=norm_fn, padding=1, indice_key='subm2'),
+            block(num_filters[1], num_filters[1], 3, norm_fn=norm_fn, padding=1, indice_key='subm2'),
         )
 
         self.conv3 = spconv.SparseSequential(
             # [800, 704, 21] <- [400, 352, 11]
-            block(32, 64, 3, norm_fn=norm_fn, stride=2, padding=1, indice_key='spconv3', conv_type='spconv'),
-            block(64, 64, 3, norm_fn=norm_fn, padding=1, indice_key='subm3'),
-            block(64, 64, 3, norm_fn=norm_fn, padding=1, indice_key='subm3'),
+            block(num_filters[1], num_filters[2], 3, norm_fn=norm_fn, stride=2, padding=1, indice_key='spconv3', conv_type='spconv'),
+            block(num_filters[2], num_filters[2], 3, norm_fn=norm_fn, padding=1, indice_key='subm3'),
+            block(num_filters[2], num_filters[2], 3, norm_fn=norm_fn, padding=1, indice_key='subm3'),
         )
 
         self.conv4 = spconv.SparseSequential(
             # [400, 352, 11] <- [200, 176, 5]
-            block(64, 64, 3, norm_fn=norm_fn, stride=2, padding=(0, 1, 1), indice_key='spconv4', conv_type='spconv'),
-            block(64, 64, 3, norm_fn=norm_fn, padding=1, indice_key='subm4'),
-            block(64, 64, 3, norm_fn=norm_fn, padding=1, indice_key='subm4'),
+            block(num_filters[2], num_filters[3], 3, norm_fn=norm_fn, stride=2, padding=(0, 1, 1), indice_key='spconv4', conv_type='spconv'),
+            block(num_filters[3], num_filters[3], 3, norm_fn=norm_fn, padding=1, indice_key='subm4'),
+            block(num_filters[3], num_filters[3], 3, norm_fn=norm_fn, padding=1, indice_key='subm4'),
         )
 
         last_pad = 0
         last_pad = self.model_cfg.get('last_pad', last_pad)
         self.conv_out = spconv.SparseSequential(
             # [200, 150, 5] -> [200, 150, 2]
-            spconv.SparseConv3d(64, 128, (3, 1, 1), stride=(2, 1, 1), padding=last_pad,
+            spconv.SparseConv3d(num_filters[3], out_features, (3, 1, 1), stride=(2, 1, 1), padding=last_pad,
                                 bias=False, indice_key='spconv_down2'),
-            norm_fn(128),
+            norm_fn(out_features),
             nn.ReLU(),
         )
-        self.num_point_features = 128
+        
+        # Support RETURN_NUM_FEATURES_AS_DICT for CasA compatibility
+        self.return_num_features_as_dict = model_cfg.get('RETURN_NUM_FEATURES_AS_DICT', False)
+        if self.return_num_features_as_dict:
+            self.num_point_features = {
+                'x_conv1': num_filters[0],
+                'x_conv2': num_filters[1],
+                'x_conv3': num_filters[2],
+                'x_conv4': num_filters[3],
+            }
+        else:
+            self.num_point_features = out_features
+            
         self.backbone_channels = {
-            'x_conv1': 16,
-            'x_conv2': 32,
-            'x_conv3': 64,
-            'x_conv4': 64
+            'x_conv1': num_filters[0],
+            'x_conv2': num_filters[1],
+            'x_conv3': num_filters[2],
+            'x_conv4': num_filters[3]
         }
 
 
