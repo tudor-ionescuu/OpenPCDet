@@ -108,6 +108,7 @@ class BaseBEVBackbone(nn.Module):
             x = self.deblocks[-1](x)
 
         data_dict['spatial_features_2d'] = x
+        data_dict['st_features_2d'] = x  # Alias for CasA compatibility
 
         return data_dict
 
