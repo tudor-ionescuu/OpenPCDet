@@ -13,7 +13,7 @@ from ..model_utils.ctrans import *
 # part multi-att no shared
 class CasA_V_V1(CascadeRoIHeadTemplate):
     def __init__(self, input_channels, model_cfg, point_cloud_range=None, voxel_size=None, num_frames=1, num_class=1,
-                 **kwargs):
+                 backbone_channels=None, **kwargs):
         super().__init__(num_class=num_class, num_frames=num_frames, model_cfg=model_cfg)
         self.model_cfg = model_cfg
         self.pool_cfg = model_cfg.ROI_GRID_POOL
@@ -22,6 +22,10 @@ class CasA_V_V1(CascadeRoIHeadTemplate):
         self.voxel_size = voxel_size
 
         self.stages = model_cfg.STAGES
+        
+        # Handle both old dict format and new separate backbone_channels parameter
+        if backbone_channels is not None:
+            input_channels = backbone_channels
 
         c_out = 0
         self.roi_grid_pool_layers = nn.ModuleList()
@@ -426,7 +430,7 @@ class CasA_V_V1(CascadeRoIHeadTemplate):
 # part multi-att att no shared
 class CasA_V(CascadeRoIHeadTemplate):
     def __init__(self, input_channels, model_cfg, point_cloud_range=None, voxel_size=None, num_frames=1, num_class=1,
-                 **kwargs):
+                 backbone_channels=None, **kwargs):
         super().__init__(num_class=num_class, num_frames=num_frames, model_cfg=model_cfg)
         self.model_cfg = model_cfg
         self.pool_cfg = model_cfg.ROI_GRID_POOL
@@ -435,6 +439,10 @@ class CasA_V(CascadeRoIHeadTemplate):
         self.voxel_size = voxel_size
 
         self.stages = model_cfg.STAGES
+        
+        # Handle both old dict format and new separate backbone_channels parameter
+        if backbone_channels is not None:
+            input_channels = backbone_channels
 
         c_out = 0
         self.roi_grid_pool_layers = nn.ModuleList()
