@@ -11,7 +11,7 @@ from pcdet.utils import common_utils, commu_utils
 def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, accumulated_iter, optim_cfg,
                     rank, tbar, total_it_each_epoch, dataloader_iter, tb_log=None, leave_pbar=False, 
                     use_logger_to_record=False, logger=None, logger_iter_interval=50, cur_epoch=None, 
-                    total_epochs=None, ckpt_save_dir=None, ckpt_save_time_interval=300, show_gpu_stat=False, use_amp=False):
+                    total_epochs=None, ckpt_save_dir=None, ckpt_save_time_interval=300, show_gpu_stat=False, use_amp=False, wandb_run=None):
     if total_it_each_epoch == len(train_loader):
         dataloader_iter = iter(train_loader)
 
@@ -132,6 +132,20 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
                 for key, val in tb_dict.items():
                     tb_log.add_scalar('train/' + key, val, accumulated_iter)
             
+            # Log to wandb
+            if wandb_run is not None:
+                wandb_log_dict = {
+                    'train/loss': loss.item(),
+                    'train/lr': cur_lr,
+                    'train/epoch': cur_epoch + (cur_it / total_it_each_epoch),
+                    'train/data_time': data_time.val,
+                    'train/forward_time': forward_time.val,
+                    'train/batch_time': batch_time.val,
+                }
+                for key, val in tb_dict.items():
+                    wandb_log_dict[f'train/{key}'] = val
+                wandb_run.log(wandb_log_dict, step=accumulated_iter)
+            
             # save intermediate ckpt every {ckpt_save_time_interval} seconds         
             time_past_this_epoch = pbar.format_dict['elapsed']
             if time_past_this_epoch // ckpt_save_time_interval >= ckpt_save_cnt:
@@ -151,7 +165,7 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
                 start_epoch, total_epochs, start_iter, rank, tb_log, ckpt_save_dir, train_sampler=None,
                 lr_warmup_scheduler=None, ckpt_save_interval=1, max_ckpt_save_num=50,
                 merge_all_iters_to_one_epoch=False, use_amp=False,
-                use_logger_to_record=False, logger=None, logger_iter_interval=None, ckpt_save_time_interval=None, show_gpu_stat=False, cfg=None):
+                use_logger_to_record=False, logger=None, logger_iter_interval=None, ckpt_save_time_interval=None, show_gpu_stat=False, cfg=None, wandb_run=None):
     accumulated_iter = start_iter
 
     # use for disable data augmentation hook
@@ -191,7 +205,8 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
                 logger=logger, logger_iter_interval=logger_iter_interval,
                 ckpt_save_dir=ckpt_save_dir, ckpt_save_time_interval=ckpt_save_time_interval, 
                 show_gpu_stat=show_gpu_stat,
-                use_amp=use_amp
+                use_amp=use_amp,
+                wandb_run=wandb_run
             )
 
             # save trained model

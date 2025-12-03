@@ -49,6 +49,9 @@ def parse_config():
     parser.add_argument('--ckpt_save_time_interval', type=int, default=300, help='in terms of seconds')
     parser.add_argument('--wo_gpu_stat', action='store_true', help='')
     parser.add_argument('--use_amp', action='store_true', help='use mix precision training')
+    parser.add_argument('--use_wandb', action='store_true', default=False, help='use wandb for logging')
+    parser.add_argument('--wandb_project', type=str, default='openpcdet', help='wandb project name')
+    parser.add_argument('--wandb_entity', type=str, default=None, help='wandb entity (team) name')
     
 
     args = parser.parse_args()
@@ -115,6 +118,31 @@ def main():
         os.system('cp %s %s' % (args.cfg_file, output_dir))
 
     tb_log = SummaryWriter(log_dir=str(output_dir / 'tensorboard')) if cfg.LOCAL_RANK == 0 else None
+
+    # Initialize wandb
+    wandb_run = None
+    if args.use_wandb and cfg.LOCAL_RANK == 0:
+        try:
+            import wandb
+            wandb_run = wandb.init(
+                project=args.wandb_project,
+                entity=args.wandb_entity,
+                name=f"{cfg.TAG}_{args.extra_tag}",
+                config={
+                    'model': cfg.MODEL.NAME,
+                    'dataset': cfg.DATA_CONFIG.DATASET,
+                    'batch_size': args.batch_size,
+                    'epochs': args.epochs,
+                    'lr': cfg.OPTIMIZATION.LR,
+                    'optimizer': cfg.OPTIMIZATION.OPTIMIZER,
+                    **vars(args)
+                },
+                dir=str(output_dir)
+            )
+            logger.info(f'Weights & Biases logging enabled: {wandb_run.url}')
+        except ImportError:
+            logger.warning('wandb not installed, skipping wandb logging')
+            wandb_run = None
 
     logger.info("----------- Create dataloader & network & optimizer -----------")
     train_set, train_loader, train_sampler = build_dataloader(
@@ -203,7 +231,8 @@ def main():
         use_logger_to_record=not args.use_tqdm_to_record, 
         show_gpu_stat=not args.wo_gpu_stat,
         use_amp=args.use_amp,
-        cfg=cfg
+        cfg=cfg,
+        wandb_run=wandb_run
     )
 
     if hasattr(train_set, 'use_shared_memory') and train_set.use_shared_memory:
@@ -211,6 +240,9 @@ def main():
 
     logger.info('**********************End training %s/%s(%s)**********************\n\n\n'
                 % (cfg.EXP_GROUP_PATH, cfg.TAG, args.extra_tag))
+
+    if wandb_run is not None:
+        wandb_run.finish()
 
     logger.info('**********************Start evaluation %s/%s(%s)**********************' %
                 (cfg.EXP_GROUP_PATH, cfg.TAG, args.extra_tag))
