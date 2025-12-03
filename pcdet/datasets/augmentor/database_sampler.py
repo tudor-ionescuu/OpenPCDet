@@ -31,11 +31,14 @@ class DataBaseSampler(object):
         for db_info_path in sampler_cfg.DB_INFO_PATH:
             db_info_path = self.root_path.resolve() / db_info_path
             if not db_info_path.exists():
-                assert len(sampler_cfg.DB_INFO_PATH) == 1
-                sampler_cfg.DB_INFO_PATH[0] = sampler_cfg.BACKUP_DB_INFO['DB_INFO_PATH']
-                sampler_cfg.DB_DATA_PATH[0] = sampler_cfg.BACKUP_DB_INFO['DB_DATA_PATH']
-                db_info_path = self.root_path.resolve() / sampler_cfg.DB_INFO_PATH[0]
-                sampler_cfg.NUM_POINT_FEATURES = sampler_cfg.BACKUP_DB_INFO['NUM_POINT_FEATURES']
+                if hasattr(sampler_cfg, 'BACKUP_DB_INFO'):
+                    assert len(sampler_cfg.DB_INFO_PATH) == 1
+                    sampler_cfg.DB_INFO_PATH[0] = sampler_cfg.BACKUP_DB_INFO['DB_INFO_PATH']
+                    sampler_cfg.DB_DATA_PATH[0] = sampler_cfg.BACKUP_DB_INFO['DB_DATA_PATH']
+                    db_info_path = self.root_path.resolve() / sampler_cfg.DB_INFO_PATH[0]
+                    sampler_cfg.NUM_POINT_FEATURES = sampler_cfg.BACKUP_DB_INFO['NUM_POINT_FEATURES']
+                else:
+                    raise FileNotFoundError(f'Database info file not found: {db_info_path}')
 
             with open(str(db_info_path), 'rb') as f:
                 infos = pickle.load(f)
@@ -367,7 +370,7 @@ class DataBaseSampler(object):
         gt_boxes = data_dict['gt_boxes'][gt_boxes_mask]
         gt_names = data_dict['gt_names'][gt_boxes_mask]
         points = data_dict['points']
-        if self.sampler_cfg.get('USE_ROAD_PLANE', False) and mv_height is None:
+        if self.sampler_cfg.get('USE_ROAD_PLANE', False) and mv_height is None and 'road_plane' in data_dict:
             sampled_gt_boxes, mv_height = self.put_boxes_on_road_planes(
                 sampled_gt_boxes, data_dict['road_plane'], data_dict['calib']
             )
@@ -400,7 +403,7 @@ class DataBaseSampler(object):
             assert obj_points.shape[0] == info['num_points_in_gt']
             obj_points[:, :3] += info['box3d_lidar'][:3].astype(np.float32)
 
-            if self.sampler_cfg.get('USE_ROAD_PLANE', False):
+            if self.sampler_cfg.get('USE_ROAD_PLANE', False) and mv_height is not None:
                 # mv height
                 obj_points[:, 2] -= mv_height[idx]
 
