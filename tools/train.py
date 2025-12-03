@@ -52,6 +52,7 @@ def parse_config():
     parser.add_argument('--use_wandb', action='store_true', default=False, help='use wandb for logging')
     parser.add_argument('--wandb_project', type=str, default='openpcdet', help='wandb project name')
     parser.add_argument('--wandb_entity', type=str, default=None, help='wandb entity (team) name')
+    parser.add_argument('--wandb_name', type=str, default=None, help='wandb run name (default: {model}_{extra_tag})')
     
 
     args = parser.parse_args()
@@ -124,10 +125,11 @@ def main():
     if args.use_wandb and cfg.LOCAL_RANK == 0:
         try:
             import wandb
+            run_name = args.wandb_name if args.wandb_name else f"{cfg.TAG}_{args.extra_tag}"
             wandb_run = wandb.init(
                 project=args.wandb_project,
                 entity=args.wandb_entity,
-                name=f"{cfg.TAG}_{args.extra_tag}",
+                name=run_name,
                 config={
                     'model': cfg.MODEL.NAME,
                     'dataset': cfg.DATA_CONFIG.DATASET,
