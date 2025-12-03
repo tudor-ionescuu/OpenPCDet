@@ -158,7 +158,7 @@ def train_one_epoch(model, optimizer, train_loader, model_func, lr_scheduler, ac
                 
     if rank == 0:
         pbar.close()
-    return accumulated_iter
+    return accumulated_iter, losses_m.avg if rank == 0 else None
 
 
 def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_cfg,
@@ -191,7 +191,7 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
                 cur_scheduler = lr_scheduler
             
             augment_disable_flag = disable_augmentation_hook(hook_config, dataloader_iter, total_epochs, cur_epoch, cfg, augment_disable_flag, logger)
-            accumulated_iter = train_one_epoch(
+            accumulated_iter, epoch_loss = train_one_epoch(
                 model, optimizer, train_loader, model_func,
                 lr_scheduler=cur_scheduler,
                 accumulated_iter=accumulated_iter, optim_cfg=optim_cfg,
@@ -208,6 +208,22 @@ def train_model(model, optimizer, train_loader, model_func, lr_scheduler, optim_
                 use_amp=use_amp,
                 wandb_run=wandb_run
             )
+
+            # Log epoch-level metrics to wandb
+            if rank == 0 and wandb_run is not None:
+                try:
+                    cur_lr = float(optimizer.lr)
+                except:
+                    cur_lr = optimizer.param_groups[0]['lr']
+                
+                epoch_metrics = {
+                    'epoch/loss': epoch_loss,
+                    'epoch/learning_rate': cur_lr,
+                    'epoch/epoch': cur_epoch + 1,
+                }
+                wandb_run.log(epoch_metrics, step=accumulated_iter)
+                if logger is not None:
+                    logger.info(f'Epoch {cur_epoch + 1}/{total_epochs} completed - Loss: {epoch_loss:.4f}, LR: {cur_lr:.6e}')
 
             # save trained model
             trained_epoch = cur_epoch + 1
