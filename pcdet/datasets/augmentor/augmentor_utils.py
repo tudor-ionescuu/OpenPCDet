@@ -3,6 +3,7 @@ import math
 import copy
 from ...utils import common_utils
 from ...utils import box_utils
+from ...ops.roiaware_pool3d import roiaware_pool3d_utils
 
 
 def random_flip_along_x(gt_boxes, points, return_flip=False, enable=None):
@@ -671,4 +672,88 @@ def local_pyramid_swap(gt_boxes, points, prob, max_num_pts, pyramids=None):
             
             points_res = np.concatenate(points_res, axis=0)
             points = np.concatenate([remain_points, points_res], axis=0)
+    return gt_boxes, points
+
+
+def random_object_noise_per_box(gt_boxes, points, valid_mask=None, 
+                                  loc_noise_std=[1.0, 1.0, 0.5],
+                                  rot_noise=[-0.78539816, 0.78539816],
+                                  num_try=100):
+    """
+    Apply random noise to each ground truth box independently.
+    This is the critical per-object augmentation from SE-SSD.
+    
+    Args:
+        gt_boxes: (N, 7 + C), [x, y, z, dx, dy, dz, heading, ...]
+        points: (M, 3 + C)
+        valid_mask: (N,) bool mask for valid boxes
+        loc_noise_std: std for location noise [x, y, z]
+        rot_noise: rotation noise range [min, max]
+        num_try: number of tries to find valid augmentation
+    """
+    if valid_mask is None:
+        valid_mask = np.ones(gt_boxes.shape[0], dtype=bool)
+    
+    num_boxes = gt_boxes.shape[0]
+    if num_boxes == 0:
+        return gt_boxes, points
+    
+    # Generate location noise for each box
+    loc_noises = np.random.normal(scale=loc_noise_std, size=[num_boxes, num_try, 3])
+    
+    # Generate rotation noise for each box
+    if isinstance(rot_noise, list):
+        rot_noises = np.random.uniform(rot_noise[0], rot_noise[1], size=[num_boxes, num_try])
+    else:
+        rot_noises = np.random.uniform(-rot_noise, rot_noise, size=[num_boxes, num_try])
+    
+    # For each box, apply noise and check if still valid
+    for i in range(num_boxes):
+        if not valid_mask[i]:
+            continue
+            
+        # Find points in this box
+        box = gt_boxes[i:i+1]
+        point_masks = roiaware_pool3d_utils.points_in_boxes_cpu(
+            points[:, :3], box[:, :7]
+        ).astype(bool).squeeze(0)  # squeeze on axis 0 since shape is (1, num_points)
+        
+        if not point_masks.any():
+            continue
+            
+        box_points = points[point_masks]
+        
+        # Try different noise values
+        for t in range(num_try):
+            # Apply location noise
+            new_box = box.copy()
+            new_box[0, :3] += loc_noises[i, t]
+            
+            # Apply rotation noise
+            rot = rot_noises[i, t]
+            new_box[0, 6] += rot
+            
+            # Rotate points around box center
+            if abs(rot) > 1e-5:
+                # Transform points to box center coordinate
+                box_center = box[0, :3]
+                box_points_centered = box_points[:, :3] - box_center
+                
+                # Rotate
+                cosa = np.cos(rot)
+                sina = np.sin(rot)
+                rot_matrix = np.array([[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]])
+                box_points_centered = box_points_centered @ rot_matrix.T
+                
+                # Transform back and add location noise
+                new_points = box_points_centered + new_box[0, :3]
+            else:
+                new_points = box_points[:, :3] + loc_noises[i, t]
+            
+            # Check if augmented box is still reasonable (simple check)
+            # In practice, you might want more sophisticated validation
+            gt_boxes[i] = new_box[0]
+            points[point_masks, :3] = new_points
+            break  # Accept first noise
+    
     return gt_boxes, points

@@ -10,6 +10,8 @@ def _build_conv(in_channels, out_channels, kernel_size, stride=1, padding=0, bia
         momentum = norm_cfg.get('momentum', 0.01)
         if norm_type == 'bn2d':
             layers.append(nn.BatchNorm2d(out_channels, eps=eps, momentum=momentum))
+        elif norm_type == 'syncbn':
+            layers.append(nn.SyncBatchNorm(out_channels, eps=eps, momentum=momentum))
         else:
             raise NotImplementedError(f'Unsupported norm type: {norm_type}')
     layers.append(nn.ReLU())
@@ -27,6 +29,8 @@ def _build_deconv(in_channels, out_channels, kernel_size, stride=1, padding=0, o
         momentum = norm_cfg.get('momentum', 0.01)
         if norm_type == 'bn2d':
             layers.append(nn.BatchNorm2d(out_channels, eps=eps, momentum=momentum))
+        elif norm_type == 'syncbn':
+            layers.append(nn.SyncBatchNorm(out_channels, eps=eps, momentum=momentum))
         else:
             raise NotImplementedError(f'Unsupported norm type: {norm_type}')
     layers.append(nn.ReLU())
@@ -131,6 +135,8 @@ def _norm_relu(norm_cfg, num_features):
         momentum = norm_cfg.get('momentum', 0.01)
         if norm_type == 'bn2d':
             layers.append(nn.BatchNorm2d(num_features, eps=eps, momentum=momentum))
+        elif norm_type == 'syncbn':
+            layers.append(nn.SyncBatchNorm(num_features, eps=eps, momentum=momentum))
         else:
             raise NotImplementedError(f'Unsupported norm type: {norm_type}')
     layers.append(nn.ReLU())
@@ -146,4 +152,6 @@ def _norm_only(norm_cfg, num_features):
     momentum = norm_cfg.get('momentum', 0.01)
     if norm_type == 'bn2d':
         return (nn.BatchNorm2d(num_features, eps=eps, momentum=momentum),)
+    elif norm_type == 'syncbn':
+        return (nn.SyncBatchNorm(num_features, eps=eps, momentum=momentum),)
     raise NotImplementedError(f'Unsupported norm type: {norm_type}')

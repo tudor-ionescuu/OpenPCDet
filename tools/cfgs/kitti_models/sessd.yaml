@@ -21,6 +21,18 @@ DATA_CONFIG:
               REMOVE_EXTRA_WIDTH: [0.0, 0.0, 0.0]
               LIMIT_WHOLE_SCENE: True
 
+            - NAME: random_object_noise
+              LOC_NOISE_STD: [1.0, 1.0, 0.5]
+              ROT_NOISE: [-0.78539816, 0.78539816]
+              NUM_TRY: 100
+
+            - NAME: random_local_pyramid_aug
+              DROP_PROB: 0.25
+              SPARSIFY_PROB: 0.05
+              SPARSIFY_MAX_NUM: 50
+              SWAP_PROB: 0.1
+              SWAP_MAX_NUM: 50
+
             - NAME: random_world_flip
               ALONG_AXIS_LIST: ['x']
 
@@ -43,8 +55,8 @@ DATA_CONFIG:
           VOXEL_SIZE: [0.05, 0.05, 0.1]
           MAX_POINTS_PER_VOXEL: 5
           MAX_NUMBER_OF_VOXELS:
-              'train': 20000
-              'test': 20000
+              'train': 40000
+              'test': 40000
 
 
 MODEL:
@@ -65,7 +77,7 @@ MODEL:
     BACKBONE_2D:
         NAME: SSFA
         NORM_CFG:
-            type: BN2d
+            type: SyncBN  # CRITICAL: Use SyncBN for distributed training with small batch sizes
             eps: 0.001
             momentum: 0.01
 

@@ -25,11 +25,13 @@ def build_optimizer(model, optim_cfg):
 
         flatten_model = lambda m: sum(map(flatten_model, m.children()), []) if num_children(m) else [m]
         get_layer_groups = lambda m: [nn.Sequential(*flatten_model(m))]
-        betas = optim_cfg.get('BETAS', (0.9, 0.99))
+        # FIX: Use correct beta2 value (0.999 like original SE-SSD, not 0.99)
+        betas = optim_cfg.get('BETAS', (0.9, 0.999))
         betas = tuple(betas)
         optimizer_func = partial(optim.Adam, betas=betas)
+        # FIX: Use optim_cfg.LR instead of hardcoded 3e-3
         optimizer = OptimWrapper.create(
-            optimizer_func, 3e-3, get_layer_groups(model), wd=optim_cfg.WEIGHT_DECAY, true_wd=True, bn_wd=True
+            optimizer_func, optim_cfg.LR, get_layer_groups(model), wd=optim_cfg.WEIGHT_DECAY, true_wd=True, bn_wd=True
         )
     else:
         raise NotImplementedError

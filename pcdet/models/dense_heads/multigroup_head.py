@@ -171,6 +171,8 @@ class MultiGroupHead(AnchorHeadTemplate):
         target_boxes = self.box_coder.decode_torch(box_reg_targets, anchors)
 
         iou_preds = iou_preds.view(batch_size, -1, 1)
+
+        # Compute IoU targets only for positive anchors
         iou_targets_full = iou_preds.new_zeros(iou_preds.shape)
         if positives.any():
             pred_boxes_pos = pred_boxes[positives]
@@ -181,6 +183,7 @@ class MultiGroupHead(AnchorHeadTemplate):
             mask = positives.unsqueeze(-1)
             iou_targets_full[mask] = iou_targets.view(-1)
 
+        # Apply loss only to positive anchors via weights (negatives have weight 0)
         loss_src = self.iou_loss_func(iou_preds, iou_targets_full, weights=reg_weights)
         loss = loss_src.sum() / batch_size
 

@@ -265,6 +265,28 @@ class DataAugmentor(object):
         data_dict['points'] = points
         return data_dict
 
+    def random_object_noise(self, data_dict=None, config=None):
+        """
+        Apply random noise to each ground truth object independently.
+        Critical augmentation for SE-SSD self-ensembling.
+        """
+        if data_dict is None:
+            return partial(self.random_object_noise, config=config)
+
+        gt_boxes, points = data_dict['gt_boxes'], data_dict['points']
+        
+        gt_boxes, points = augmentor_utils.random_object_noise_per_box(
+            gt_boxes, points,
+            valid_mask=None,
+            loc_noise_std=config.get('LOC_NOISE_STD', [1.0, 1.0, 0.5]),
+            rot_noise=config.get('ROT_NOISE', [-0.78539816, 0.78539816]),
+            num_try=config.get('NUM_TRY', 100)
+        )
+        
+        data_dict['gt_boxes'] = gt_boxes
+        data_dict['points'] = points
+        return data_dict
+
     def imgaug(self, data_dict=None, config=None):
         if data_dict is None:
             return partial(self.imgaug, config=config)
