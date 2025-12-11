@@ -16,6 +16,7 @@ from pcdet.models import build_network, model_fn_decorator
 from pcdet.utils import common_utils
 from train_utils.optimization import build_optimizer, build_scheduler
 from train_utils.train_utils import train_model
+from train_utils.wandb_logger import WandbLogger, EarlyStopping
 
 
 def parse_config():
@@ -49,11 +50,18 @@ def parse_config():
     parser.add_argument('--ckpt_save_time_interval', type=int, default=300, help='in terms of seconds')
     parser.add_argument('--wo_gpu_stat', action='store_true', help='')
     parser.add_argument('--use_amp', action='store_true', help='use mix precision training')
-    parser.add_argument('--use_wandb', action='store_true', default=False, help='use wandb for logging')
+    
+    # Wandb arguments
+    parser.add_argument('--use_wandb', action='store_true', default=False, help='use Weights & Biases logging')
     parser.add_argument('--wandb_project', type=str, default='openpcdet', help='wandb project name')
     parser.add_argument('--wandb_entity', type=str, default=None, help='wandb entity (team) name')
     parser.add_argument('--wandb_name', type=str, default=None, help='wandb run name (default: {model}_{extra_tag})')
+    parser.add_argument('--wandb_resume_id', type=str, default=None, help='wandb run id to resume')
     
+    # Early stopping arguments
+    parser.add_argument('--early_stopping', action='store_true', help='use early stopping')
+    parser.add_argument('--early_stopping_patience', type=int, default=7, help='patience for early stopping')
+    parser.add_argument('--early_stopping_min_delta', type=float, default=0.001, help='minimum change to qualify as improvement')
 
     args = parser.parse_args()
 
@@ -119,32 +127,20 @@ def main():
         os.system('cp %s %s' % (args.cfg_file, output_dir))
 
     tb_log = SummaryWriter(log_dir=str(output_dir / 'tensorboard')) if cfg.LOCAL_RANK == 0 else None
-
-    # Initialize wandb
-    wandb_run = None
-    if args.use_wandb and cfg.LOCAL_RANK == 0:
-        try:
-            import wandb
-            run_name = args.wandb_name if args.wandb_name else f"{cfg.TAG}_{args.extra_tag}"
-            wandb_run = wandb.init(
-                project=args.wandb_project,
-                entity=args.wandb_entity,
-                name=run_name,
-                config={
-                    'model': cfg.MODEL.NAME,
-                    'dataset': cfg.DATA_CONFIG.DATASET,
-                    'batch_size': args.batch_size,
-                    'epochs': args.epochs,
-                    'lr': cfg.OPTIMIZATION.LR,
-                    'optimizer': cfg.OPTIMIZATION.OPTIMIZER,
-                    **vars(args)
-                },
-                dir=str(output_dir)
-            )
-            logger.info(f'Weights & Biases logging enabled: {wandb_run.url}')
-        except ImportError:
-            logger.warning('wandb not installed, skipping wandb logging')
-            wandb_run = None
+    
+    # Initialize wandb logger
+    wandb_logger = WandbLogger(cfg, args, logger, enabled=(args.use_wandb and cfg.LOCAL_RANK == 0))
+    
+    # Initialize early stopping
+    early_stopping = None
+    if args.early_stopping and cfg.LOCAL_RANK == 0:
+        early_stopping = EarlyStopping(
+            patience=args.early_stopping_patience,
+            min_delta=args.early_stopping_min_delta,
+            mode='min',
+            logger=logger
+        )
+        logger.info(f"Early stopping enabled with patience={args.early_stopping_patience}")
 
     logger.info("----------- Create dataloader & network & optimizer -----------")
     train_set, train_loader, train_sampler = build_dataloader(
@@ -234,17 +230,19 @@ def main():
         show_gpu_stat=not args.wo_gpu_stat,
         use_amp=args.use_amp,
         cfg=cfg,
-        wandb_run=wandb_run
+        wandb_logger=wandb_logger,
+        early_stopping=early_stopping
     )
 
     if hasattr(train_set, 'use_shared_memory') and train_set.use_shared_memory:
         train_set.clean_shared_memory()
+    
+    # Finish wandb logging
+    if wandb_logger is not None:
+        wandb_logger.finish()
 
     logger.info('**********************End training %s/%s(%s)**********************\n\n\n'
                 % (cfg.EXP_GROUP_PATH, cfg.TAG, args.extra_tag))
-
-    if wandb_run is not None:
-        wandb_run.finish()
 
     logger.info('**********************Start evaluation %s/%s(%s)**********************' %
                 (cfg.EXP_GROUP_PATH, cfg.TAG, args.extra_tag))
@@ -252,12 +250,13 @@ def main():
         dataset_cfg=cfg.DATA_CONFIG,
         class_names=cfg.CLASS_NAMES,
         batch_size=args.batch_size,
-        dist=dist_train, workers=args.workers, logger=logger, training=False
+        dist=dist_train, workers=args.workers,
+        logger=logger,
+        training=False
     )
     eval_output_dir = output_dir / 'eval' / 'eval_with_train'
     eval_output_dir.mkdir(parents=True, exist_ok=True)
     args.start_epoch = max(args.epochs - args.num_epochs_to_eval, 0)  # Only evaluate the last args.num_epochs_to_eval epochs
-
     repeat_eval_ckpt(
         model.module if dist_train else model,
         test_loader, args, eval_output_dir, logger, ckpt_dir,

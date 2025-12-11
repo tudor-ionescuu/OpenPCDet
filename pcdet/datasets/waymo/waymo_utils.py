@@ -223,7 +223,7 @@ def process_single_sequence(sequence_file, save_path, sampled_interval, has_labe
             continue
         # print(sequence_name, cnt)
         frame = dataset_pb2.Frame()
-        frame.ParseFromString(bytearray(data.numpy()))
+        frame.ParseFromString(bytes(data.numpy()))
 
         info = {}
         pc_info = {'num_features': 5, 'lidar_sequence': sequence_name, 'sample_idx': cnt}
