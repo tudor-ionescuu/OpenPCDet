@@ -24,6 +24,10 @@ class DatasetTemplate(torch_data.Dataset):
         if self.dataset_cfg is None or class_names is None:
             return
 
+        # Class remapping: map multiple source classes to a single target class
+        # Example config: CLASS_REMAP: {'Car': 'Object', 'Pedestrian': 'Object', 'Cyclist': 'Object'}
+        self.class_remap = self.dataset_cfg.get('CLASS_REMAP', None)
+
         self.rot_num = self.dataset_cfg.get('ROT_NUM', 1)
 
         self.point_cloud_range = np.array(self.dataset_cfg.POINT_CLOUD_RANGE, dtype=np.float32)
@@ -32,8 +36,10 @@ class DatasetTemplate(torch_data.Dataset):
             point_cloud_range=self.point_cloud_range,
             rot_num=self.rot_num
         )
+        # Use SOURCE_CLASS_NAMES for augmentation if specified (for class remapping scenarios)
+        augmentor_class_names = self.dataset_cfg.get('SOURCE_CLASS_NAMES', self.class_names)
         self.data_augmentor = DataAugmentor(
-            self.root_path, self.dataset_cfg.DATA_AUGMENTOR, self.class_names, logger=self.logger
+            self.root_path, self.dataset_cfg.DATA_AUGMENTOR, augmentor_class_names, logger=self.logger
         ) if self.training else None
         self.data_processor = DataProcessor(
             self.dataset_cfg.DATA_PROCESSOR, point_cloud_range=self.point_cloud_range,
@@ -187,6 +193,10 @@ class DatasetTemplate(torch_data.Dataset):
                 voxel_num_points: optional (num_voxels)
                 ...
         """
+        # Apply class remapping if configured
+        if self.class_remap is not None and 'gt_names' in data_dict:
+            data_dict['gt_names'] = np.array([self.class_remap.get(n, n) for n in data_dict['gt_names']])
+        
         if self.training:
             assert 'gt_boxes' in data_dict, 'gt_boxes should be provided for training'
             gt_boxes_mask = np.array([n in self.class_names for n in data_dict['gt_names']], dtype=np.bool_)
@@ -199,6 +209,9 @@ class DatasetTemplate(torch_data.Dataset):
                     'gt_boxes_mask': gt_boxes_mask
                 }
             )
+            # Re-apply class remapping after augmentor (database sampler adds objects with original class names)
+            if self.class_remap is not None and 'gt_names' in data_dict:
+                data_dict['gt_names'] = np.array([self.class_remap.get(n, n) for n in data_dict['gt_names']])
             if 'calib' in data_dict:
                 data_dict['calib'] = calib
             

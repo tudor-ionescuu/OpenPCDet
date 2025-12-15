@@ -1,8 +1,19 @@
-CLASS_NAMES: ['Car', 'Pedestrian', 'Cyclist']
+CLASS_NAMES: ['Object']
 
 DATA_CONFIG: 
     _BASE_CONFIG_: cfgs/dataset_configs/kitti_dataset.yaml
     POINT_CLOUD_RANGE: [0, -39.68, -3, 69.12, 39.68, 1]
+    
+    # Source class names used for data augmentation (must match database)
+    SOURCE_CLASS_NAMES: ['Car', 'Pedestrian', 'Cyclist']
+    
+    # Remap all classes to single "Object" class
+    CLASS_REMAP: {
+        'Car': 'Object',
+        'Pedestrian': 'Object',
+        'Cyclist': 'Object'
+    }
+    
     DATA_PROCESSOR:
         - NAME: mask_points_and_boxes_outside_range
           REMOVE_OUTSIDE_BOXES: True
@@ -71,7 +82,7 @@ MODEL:
 
     DENSE_HEAD:
         NAME: AnchorHeadSingle
-        CLASS_AGNOSTIC: True
+        CLASS_AGNOSTIC: False
 
         USE_DIRECTION_CLASSIFIER: True
         DIR_OFFSET: 0.78539
@@ -80,30 +91,10 @@ MODEL:
 
         ANCHOR_GENERATOR_CONFIG: [
             {
-                'class_name': 'Car',
-                'anchor_sizes': [[3.9, 1.6, 1.56]],
+                'class_name': 'Object',
+                'anchor_sizes': [[3.9, 1.6, 1.56], [0.8, 0.6, 1.73], [1.76, 0.6, 1.73]],
                 'anchor_rotations': [0, 1.57],
-                'anchor_bottom_heights': [-1.78],
-                'align_center': False,
-                'feature_map_stride': 2,
-                'matched_threshold': 0.6,
-                'unmatched_threshold': 0.45
-            },
-            {
-                'class_name': 'Pedestrian',
-                'anchor_sizes': [[0.8, 0.6, 1.73]],
-                'anchor_rotations': [0, 1.57],
-                'anchor_bottom_heights': [-0.6],
-                'align_center': False,
-                'feature_map_stride': 2,
-                'matched_threshold': 0.5,
-                'unmatched_threshold': 0.35
-            },
-            {
-                'class_name': 'Cyclist',
-                'anchor_sizes': [[1.76, 0.6, 1.73]],
-                'anchor_rotations': [0, 1.57],
-                'anchor_bottom_heights': [-0.6],
+                'anchor_bottom_heights': [-1.78, -0.6, -0.6],
                 'align_center': False,
                 'feature_map_stride': 2,
                 'matched_threshold': 0.5,

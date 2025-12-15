@@ -359,6 +359,13 @@ class KittiDataset(DatasetTemplate):
 
         eval_det_annos = copy.deepcopy(det_annos)
         eval_gt_annos = [copy.deepcopy(info['annos']) for info in self.kitti_infos]
+        
+        # Apply class remapping to GT annotations if configured
+        class_remap = self.dataset_cfg.get('CLASS_REMAP', None)
+        if class_remap is not None:
+            for gt_anno in eval_gt_annos:
+                gt_anno['name'] = np.array([class_remap.get(n, n) for n in gt_anno['name']])
+        
         ap_result_str, ap_dict = kitti_eval.get_official_eval_result(eval_gt_annos, eval_det_annos, class_names)
 
         return ap_result_str, ap_dict

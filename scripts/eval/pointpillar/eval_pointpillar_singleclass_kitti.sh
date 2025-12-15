@@ -12,12 +12,12 @@
 
 source /home/ionesctn/Code/openpcdet_project/openpcdet-env/bin/activate
 
-cd /home/ionesctn/Code/openpcdet_project/OpenPCDet
+cd /home/ionesctn/Code/openpcdet_project/OpenPCDet/tools
 
-python tools/test.py \
-    --cfg_file tools/cfgs/kitti_models/pointpillar_singleclass.yaml \
+python test.py \
+    --cfg_file cfgs/kitti_models/pointpillar_singleclass.yaml \
     --batch_size 1 \
-    --ckpt output/kitti_models/pointpillar_singleclass/singleclass_object/ckpt/checkpoint_epoch_80.pth \
+    --ckpt ../output/kitti_models/pointpillar_singleclass/singleclass_object/ckpt/checkpoint_epoch_80.pth \
     --infer_time
 
 echo "Test completed!"
