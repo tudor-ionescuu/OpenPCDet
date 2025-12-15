@@ -14,9 +14,6 @@ source /home/ionesctn/Code/openpcdet_project/openpcdet-env/bin/activate
 
 cd /home/ionesctn/Code/openpcdet_project/OpenPCDet
 
-# Test PointPillar Single-Class on KITTI
-echo "Testing PointPillar Single-Class (Object) on KITTI..."
-
 python tools/test.py \
     --cfg_file tools/cfgs/kitti_models/pointpillar_singleclass.yaml \
     --batch_size 1 \
